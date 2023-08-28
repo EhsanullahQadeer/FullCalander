@@ -1,231 +1,206 @@
-
 <!DOCTYPE html>
 <html>
-<head>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <title></title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="googlebot" content="noindex, nofollow">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src='https://code.jquery.com/jquery-3.7.0.min.js'></script>
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-  
-  
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title></title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="googlebot" content="noindex, nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://fullcalendar.io/releases/fullcalendar/3.9.0/lib/moment.min.js"></script>
 
-  <script
-    type="text/javascript"
-    src="./js/lib/dummy.js"
-    
-  ></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="/css/result-light.css">
-
-
-  <style id="compiled-css" type="text/css">
-    
-
-    /* EOS */
-  </style>
-
-  <script id="insert"></script>
-
-    <script src="./js/stringify.js?b2eead6c01625b440233c4159d4199be43d7bae0" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script type="text/javascript" src="./js/lib/dummy.js"></script>
+    <link
+      rel="stylesheet"
+      href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"
+    />
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./css/index.css" />
+    <script src="./js/stringify.js"></script>
+    <script src="./js/index.js"></script>
     <script>
-      const customConsole = (w) => {
-        const pushToConsole = (payload, type) => {
-          w.parent.postMessage({
-            console: {
-              payload: stringify(payload),
-              type:    type
-            }
-          }, "*")
-        }
-
-        w.onerror = (message, url, line, column) => {
-          // the line needs to correspond with the editor panel
-          // unfortunately this number needs to be altered every time this view is changed
-          line = line - 70
-          if (line < 0){
-            pushToConsole(message, "error")
-          } else {
-            pushToConsole(`[${line}:${column}] ${message}`, "error")
-          }
-        }
-
-        let console = (function(systemConsole){
-          return {
-            log: function(){
-              debugger
-              // let args = Array.from(arguments)
-              // pushToConsole(args, "log")
-              // systemConsole.log.apply(this, args)
-            },
-            info: function(){
-              // let args = Array.from(arguments)
-              // pushToConsole(args, "info")
-              // systemConsole.info.apply(this, args)
-            },
-            warn: function(){
-              // let args = Array.from(arguments)
-              // pushToConsole(args, "warn")
-              // systemConsole.warn.apply(this, args)
-            },
-            error: function(){
-              // let args = Array.from(arguments)
-              // pushToConsole(args, "error")
-              // systemConsole.error.apply(this, args)
-            },
-            system: function(arg){
-              pushToConsole(arg, "system")
-            },
-            clear: function(){
-              systemConsole.clear.apply(this, {})
-            },
-            time: function(){
-              let args = Array.from(arguments)
-              systemConsole.time.apply(this, args)
-            },
-            assert: function(assertion, label){
-              if (!assertion){
-                pushToConsole(label, "log")
-              }
-
-              let args = Array.from(arguments)
-              systemConsole.assert.apply(this, args)
-            }
-          }
-        }(window.console))
-
-        window.console = { ...window.console, ...console }
-
-        console.system("Running fiddle")
+      if (window.parent) {
+        customConsole(window);
+      }
+      function togglePopup() {
+        $(".overlay").toggleClass("open");
       }
 
-      if (window.parent){
-        customConsole(window)
-      }
+      $(function () {
+        $("#dialog").dialog({
+          autoOpen: false,
+        });
+      });
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <p>&nbsp;</p>
-<div class="container"> 
-    <div class="row">
-        
+    <div class="container">
+      <!--Event Popup-->
+      <div id="dialog" title=""></div>
+
+      <div class="row">
         <div class="col-md-12">
-            <div id="iCalendar" data-months='["January","February","March","April","May","June","July","August","September","October","November","December"]' data-language="en" data-self="0">  
-            </div>
+          <div
+            id="iCalendar"
+            data-months='["January","February","March","April","May","June","July","August","September","October","November","December"]'
+            data-language="en"
+            data-self="0"
+          ></div>
         </div>
-        
+      </div>
     </div>
-</div>
 
-    <script type="text/javascript">//<![CDATA[
+    <script type="text/javascript">
+      //<![CDATA[
 
+      document.addEventListener("DOMContentLoaded", function () {
+        // get selected date from local storage
+        let defMonth = window.localStorage.getItem("selectedMonth");
+        let defYear = window.localStorage.getItem("selectedYear");
+        let defaultDate;
+        // to use this anywhere instead getting multiple time from local storage
+        if (defMonth && defMonth) {
+          window.defMonth = defMonth;
+          window.defYear = defYear;
+          defaultDate = `${defYear}-${defMonth}-01`;
+        }
 
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('iCalendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'title',
-            right: 'prev,next today',
-        },
-        navLinks: true, // can click day/week names to navigate views
-        selectable: true,
-        selectMirror: true,
-        showNonCurrentDates: true,
-        longPressDelay: 1,
-        dayMaxEvents: true, // allow "more" link when too many events,
-        events: {
-            url: 'Return.php',
-            type: 'POST',
-            error: function() {
-                alert('there was an error while fetching events!');
-            }
-        },
-        droppable: false,
-        editable: true,
-        locale: $('#iCalendar').attr('data-language'),
-        selectAllow: function(info) {
-            return (info.start >= getDateWithoutTime(new Date()));
-        },
-    });
-    calendar.render();
-    $('.fc-header-toolbar').children().eq(0).html(gotoDrop());
-    // $('.fc-header-toolbar').children().eq(1).html(sHtml);
-    $(".fc-today-button").click(function() {
-        let chDt = calendar.getDate();
-        let y = chDt.getFullYear();
-        let m = ("0" + (chDt.getMonth() + 1)).slice(-2);
-        $('#month').val(m);
-        $('#year').val(y);
-    });
-});
+        var calendarEl = document.getElementById("iCalendar");
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: "dayGridMonth",
+          headerToolbar: {
+            right: "prev,next today",
+          },
+          ...(defaultDate && { initialDate: defaultDate }),
+          navLinks: true, // can click day/week names to navigate views
+          selectable: true,
+          selectMirror: true,
+          showNonCurrentDates: true,
+          longPressDelay: 1,
+          dayMaxEvents: true, // allow "more" link when too many events,
+          events: jsonData.events,
+          eventClick: function (info) {
+            handleEventPopup(info);
+          },
 
-function gotoDrop() {
-    let sHtml = '';
-    sHtml += '<div id="goto">';
-    let d = new Date();
-    let m = d.getMonth();
-    let y = d.getFullYear();
-    var aMonth = JSON.parse($("#iCalendar").attr('data-months'));
-    sHtml += '<label class="custom-select" for="styledSelect1"><select class="text ui-widget-content ui-corner-all" name="month" id="month">';
-    $.each(aMonth, function(k, v) {
-      sHtml += '<option ' + (k == m ? "selected" : "") + ' value="' + (("0" + (k + 1)).slice(-2)) + '">' + v + '</option>';
-    });
-    // sHtml += '</select></label>';
-    // sHtml += '<label class="custom-select" for="styledSelect1" style="margin-left:10px;min-width:120px;"><select class="text ui-widget-content ui-corner-all" name="year" id="year">';
-    // $.each(yearRange(), function(k, v) {
-    //   sHtml += '<option ' + (v.t == y ? "selected" : "") + ' value="' + v.v + '">' + v.t + '</option>';
-    // });
-    // sHtml += '</select></label>';
-    sHtml += '</div>';
-    return sHtml;
-}
+          droppable: false,
+          editable: true,
+          locale: $("#iCalendar").attr("data-language"),
+          selectAllow: function (info) {
+            return info.start >= getDateWithoutTime(new Date());
+          },
+        });
+        window.calendar = calendar;
+        calendar.render();
+        $(".fc-header-toolbar").children().eq(0).prepend(gotoDrop());
+        // $('.fc-header-toolbar').children().eq(1).html(sHtml);
+        $(".fc-today-button").click(function () {
+          let chDt = calendar.getDate();
+          let y = chDt.getFullYear();
+          let m = ("0" + (chDt.getMonth() + 1)).slice(-2);
+          $("#month").val(m);
+          $("#year").val(y);
+        });
+      });
 
-function getDateWithoutTime(dt) {
-    dt.setHours(0, 0, 0, 0);
-    return dt;
-}
+      function gotoDrop() {
+        let sHtml = "";
+        sHtml += '<div id="goto">';
+        let d = new Date();
+        console.log(window?.defMonth);
+        let m;
+        if (window?.defMonth) {
+          m = parseInt(window?.defMonth) - 1;
+        } else {
+          m = d.getMonth();
+        }
+        let y = window?.defYear || d.getFullYear();
+        var aMonth = JSON.parse($("#iCalendar").attr("data-months"));
+        sHtml +=
+          '<label  for="styledSelect1"><select onchange="handleMonthChange(this)" class="select_month form-control text ui-widget-content ui-corner-all" name="month" id="month">';
+        $.each(aMonth, function (k, v) {
+          sHtml +=
+            "<option " +
+            (k == m ? "selected" : "") +
+            ' value="' +
+            ("0" + (k + 1)).slice(-2) +
+            '">' +
+            v +
+            "</option>";
+        });
+        sHtml += "</select></label>";
+        sHtml +=
+          '<label  for="styledSelect1" style="margin-left:10px;min-width:120px;"><select onChange="handleYearChange(this)" class="form-control select_year text ui-widget-content ui-corner-all" name="year" id="year">';
+        $.each(yearRange(), function (k, v) {
+          sHtml +=
+            "<option " +
+            (v.t == y ? "selected" : "") +
+            ' value="' +
+            v.v +
+            '">' +
+            v.t +
+            "</option>";
+        });
+        sHtml += "</select></label>";
 
-/* Return.php */
+        sHtml += "</div>";
+        return sHtml;
+      }
 
-/*[{"status":"Processed","title":"Working from Home","start":"2023-08-14","end":"2023-08-14","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Office","start":"2023-08-15","end":"2023-08-15","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Office","start":"2023-08-15","end":"2023-08-15","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Home","start":"2023-08-16","end":"2023-08-16","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Home","start":"2023-08-16","end":"2023-08-16","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Office","start":"2023-08-17","end":"2023-08-17","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Office","start":"2023-08-17","end":"2023-08-17","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Home","start":"2023-08-18","end":"2023-08-18","id":2083851,"FullName":"User 1 "},{"status":"Processed","title":"Working from Home","start":"2023-08-18","end":"2023-08-18","id":2083851,"FullName":"User 1 "}]*/
+      function getDateWithoutTime(dt) {
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+      }
 
+      /* Return.php */
 
-
-  //]]></script>
-
-  <script>
-    // tell the embed parent frame the height of the content
-    if (window.parent && window.parent.parent){
-      window.parent.parent.postMessage(["resultsFrame", {
-        height: document.body.getBoundingClientRect().height,
-        slug: "a54k0fre"
-      }], "*")
-    }
-
-    // always overwrite window.name, in case users try to set it manually
-    window.name = "result"
-  </script>
+      //]]>
+    </script>
 
     <script>
-      let allLines = []
+      // tell the embed parent frame the height of the content
+      if (window.parent && window.parent.parent) {
+        window.parent.parent.postMessage(
+          [
+            "resultsFrame",
+            {
+              height: document.body.getBoundingClientRect().height,
+              slug: "a54k0fre",
+            },
+          ],
+          "*"
+        );
+      }
+
+      // always overwrite window.name, in case users try to set it manually
+      window.name = "result";
+    </script>
+
+    <script>
+      let allLines = [];
 
       window.addEventListener("message", (message) => {
-        if (message.data.console){
-          let insert = document.querySelector("#insert")
-          allLines.push(message.data.console.payload)
-          insert.innerHTML = allLines.join(";\r")
+        if (message.data.console) {
+          let insert = document.querySelector("#insert");
+          allLines.push(message.data.console.payload);
+          insert.innerHTML = allLines.join(";\r");
 
-          let result = eval.call(null, message.data.console.payload)
-          if (result !== undefined){
-            console.log(result)
+          let result = eval.call(null, message.data.console.payload);
+          if (result !== undefined) {
+            console.log(result);
           }
         }
-      })
+      });
     </script>
-
-</body>
+  </body>
 </html>
