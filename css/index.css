@@ -39,6 +39,9 @@ body {
 .ui-widget-header {
   color: #fff;
 }
+.fc .fc-toolbar.fc-header-toolbar{
+    align-items: end;
+}
 .searchInput {
   width: 120px;
 }
@@ -47,4 +50,5 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: 70px;
 }

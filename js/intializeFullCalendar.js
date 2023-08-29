@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   // get selected date from local storage
   let defMonth = window.localStorage.getItem("selectedMonth");
   let defYear = window.localStorage.getItem("selectedYear");
@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
     window.defYear = defYear;
     defaultDate = `${defYear}-${defMonth}-01`;
   }
-
   var calendarEl = document.getElementById("iCalendar");
   var calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
@@ -23,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
     showNonCurrentDates: true,
     longPressDelay: 1,
     dayMaxEvents: true, // allow "more" link when too many events,
-    events: jsonData.events,
+    events:await fetchCalendarData(),
     eventClick: function (info) {
       handleEventPopup(info);
     },
@@ -123,32 +122,3 @@ function getDateWithoutTime(dt) {
   dt.setHours(0, 0, 0, 0);
   return dt;
 }
-
-// tell the embed parent frame the height of the content
-if (window.parent && window.parent.parent) {
-  window.parent.parent.postMessage(
-    [
-      "resultsFrame",
-      {
-        height: document.body.getBoundingClientRect().height,
-        slug: "a54k0fre",
-      },
-    ],
-    "*"
-  );
-}
-// always overwrite window.name, in case users try to set it manually
-window.name = "result";
-
-let allLines = [];
-window.addEventListener("message", (message) => {
-  if (message.data.console) {
-    let insert = document.querySelector("#insert");
-    allLines.push(message.data.console.payload);
-    // insert.innerHTML = allLines.join(";\r");
-
-    let result = eval.call(null, message.data.console.payload);
-    if (result !== undefined) {
-    }
-  }
-});
