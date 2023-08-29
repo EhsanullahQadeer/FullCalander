@@ -3,7 +3,7 @@ let jsonData = {
 };
 
 async function fetchCalendarData() {
-  await fetch("../timcard.cfm")
+  await fetch("./timcard.cfm")
     .then((response) => response.text())
     .then((text) => {
       // Extract JSON part from the response using string manipulation
@@ -24,7 +24,7 @@ async function fetchCalendarData() {
     .catch((error) => {
       console.error("Error fetching JSON:", error);
     });
-debugger
+  debugger;
   return jsonData;
 }
 
@@ -139,98 +139,91 @@ function handleEventPopup(info) {
 }
 
 //
-document.addEventListener("DOMContentLoaded", function () {
-  $(function () {
-    var dateFormat = "mm/dd/yy",
-      from = $("#from")
-        .datepicker({
-          showWeek: true,
-          firstDay: 1,
-          changeMonth: true,
-          changeYear: true,
-          numberOfMonths: 1,
-        })
-        .on("change", function () {
-          to.datepicker("option", "minDate", getDate(this));
-          applyDateFilter();
-        }),
-      to = $("#to")
-        .datepicker({
-          defaultDate: "+1w",
-          showWeek: true,
-          firstDay: 1,
-          changeMonth: true,
-          changeYear: true,
-          numberOfMonths: 1,
-        })
-        .on("change", function () {
-          from.datepicker("option", "maxDate", getDate(this));
-          applyDateFilter();
-        });
 
-    function getDate(element) {
-      var date;
-      try {
-        date = $.datepicker.parseDate(dateFormat, element.value);
-      } catch (error) {
-        date = null;
-      }
+$(function () {
+ window.renerTopSearch= async function renerTopSearch(){
+  var dateFormat = "mm/dd/yy",
+    from = $("#from")
+      .datepicker({
+        showWeek: true,
+        firstDay: 1,
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+      })
+      .on("change", function () {
+        to.datepicker("option", "minDate", getDate(this));
+        applyDateFilter();
+      }),
+    to = $("#to")
+      .datepicker({
+        defaultDate: "+1w",
+        showWeek: true,
+        firstDay: 1,
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+      })
+      .on("change", function () {
+        from.datepicker("option", "maxDate", getDate(this));
+        applyDateFilter();
+      });
 
-      return date;
+  function getDate(element) {
+    var date;
+    try {
+      date = $.datepicker.parseDate(dateFormat, element.value);
+    } catch (error) {
+      date = null;
     }
-    function convertToYYYYMMDD(dateString) {
-      if(dateString){
+
+    return date;
+  }
+  function convertToYYYYMMDD(dateString) {
+    if (dateString) {
       const date = new Date(dateString);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
-    }else{
-      null
+    } else {
+      null;
     }
+  }
+
+  function applyDateFilter() {
+    var fromDate = from.datepicker("getDate");
+    var toDate = to.datepicker("getDate");
+    // var fromDate = convertToYYYYMMDD(from.datepicker("getDate"));
+    // var toDate = convertToYYYYMMDD(to.datepicker("getDate"));
+
+    if (!fromDate || !toDate) {
+      return; // Return if either fromDate or toDate is not selected
     }
-    
 
+    // Set the calendar's valid range based on the selected fromDate and toDate
+    window.calendar.changeView("multiMonthYear");
 
+    var multiMonthYearView = $(".fc-multiMonthYear-view");
 
+    // Select child elements within the parent container
+    var childElements = multiMonthYearView.children();
+    childElements.each(function (index, element) {
+      var dataDateValue = $(element).data("date");
+      var dateInData = new Date(dataDateValue);
 
-    function applyDateFilter() {
-       var fromDate = from.datepicker("getDate");
-        var toDate = to.datepicker("getDate");
-      // var fromDate = convertToYYYYMMDD(from.datepicker("getDate"));
-      // var toDate = convertToYYYYMMDD(to.datepicker("getDate"));
-
-      // var fromDate = new Date("2023-08-01");
-      // var toDate = new Date("2023-10-31");
-
-
-      if (!fromDate || !toDate) {
-        return; // Return if either fromDate or toDate is not selected
+      // Compare with the date range
+      if (dateInData < fromDate || dateInData > toDate) {
+        $(element).css("display", "none");
+      } else {
+        $(element).css("display", ""); // Reset the display property
       }
-
-      // Set the calendar's valid range based on the selected fromDate and toDate
-      // window.calendar.changeView("multiMonthYear");
-
-      var multiMonthYearView = $(".fc-multiMonthYear-view");
-
-      // Select child elements within the parent container
-      var childElements = multiMonthYearView.children();
-      childElements.each(function(index, element) {
-        var dataDateValue = $(element).data("date");
-        var dateInData = new Date(dataDateValue);
-
-        // Compare with the date range
-        if (dateInData < fromDate || dateInData > toDate) {
-            $(element).css("display", "none");
-        } else {
-            $(element).css("display", ""); // Reset the display property
-        }
-        // Now you can perform additional actions with the data-date value
-        // For example, you can use it to make further API requests or UI updates
+      // Now you can perform additional actions with the data-date value
+      // For example, you can use it to make further API requests or UI updates
     });
 
-      // Set the calendar's date to the fromDate
-      // window.calendar.gotoDate(fromDate);
-    }
-  });
+    // Set the calendar's date to the fromDate
+    // window.calendar.gotoDate(fromDate);
+  }
+}
 });

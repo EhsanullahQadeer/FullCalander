@@ -66,6 +66,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     //   calendar.setButtonDisabled("customNextButton", true);
     // }
   });
+//   this is beacuse above await takse some time so we hace to render this function after new fullcalendaer render
+  await window.renerTopSearch()
 });
 //
 function gotoDrop() {
@@ -122,3 +124,6 @@ function getDateWithoutTime(dt) {
   dt.setHours(0, 0, 0, 0);
   return dt;
 }
+
+
+
