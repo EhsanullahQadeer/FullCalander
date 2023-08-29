@@ -3,13 +3,16 @@
  * Inspect native browser objects and functions.
  */
 var stringify = (function () {
-
-  var sortci = function(a, b) {
+  var sortci = function (a, b) {
     return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
   };
 
   var htmlEntities = function (str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   };
 
   /**
@@ -18,36 +21,44 @@ var stringify = (function () {
    * Goes 2 levels deep.
    */
   return function stringify(o, visited, buffer) {
-    var i, vi, type = '', parts = [], circular = false;
-    buffer = buffer || '';
+    var i,
+      vi,
+      type = "",
+      parts = [],
+      circular = false;
+    buffer = buffer || "";
     visited = visited || [];
 
     // Get out fast with primitives that don't like toString
     if (o === null) {
-      return 'null';
+      return "null";
     }
-    if (typeof o === 'undefined') {
-      return 'undefined';
+    if (typeof o === "undefined") {
+      return "undefined";
     }
 
     // Determine the type
     try {
-      type = ({}).toString.call(o);
-    } catch (e) { // only happens when typeof is protected (...randomly)
-      type = '[object Object]';
+      type = {}.toString.call(o);
+    } catch (e) {
+      // only happens when typeof is protected (...randomly)
+      type = "[object Object]";
     }
 
     // Handle the primitive types
-    if (type == '[object Number]') {
-      return ''+o;
+    if (type == "[object Number]") {
+      return "" + o;
     }
-    if (type == '[object Boolean]') {
-      return o ? 'true' : 'false';
+    if (type == "[object Boolean]") {
+      return o ? "true" : "false";
     }
-    if (type == '[object Function]') {
-      return o.toString().split('\n  ').join('\n' + buffer);
+    if (type == "[object Function]") {
+      return o
+        .toString()
+        .split("\n  ")
+        .join("\n" + buffer);
     }
-    if (type == '[object String]') {
+    if (type == "[object String]") {
       return '"' + htmlEntities(o.replace(/"/g, '\\"')) + '"';
     }
 
@@ -56,8 +67,16 @@ var stringify = (function () {
       if (o === visited[vi]) {
         // Notify the user that a circular object was found and, if available,
         // show the object's outerHTML (for body and elements)
-        return '[circular ' + type.slice(1) +
-          ('outerHTML' in o ? ' :\n' + htmlEntities(o.outerHTML).split('\n').join('\n' + buffer) : '')
+        return (
+          "[circular " +
+          type.slice(1) +
+          ("outerHTML" in o
+            ? " :\n" +
+              htmlEntities(o.outerHTML)
+                .split("\n")
+                .join("\n" + buffer)
+            : "")
+        );
       }
     }
 
@@ -65,11 +84,11 @@ var stringify = (function () {
     visited.push(o);
 
     // Stringify each member of the array
-    if (type == '[object Array]') {
+    if (type == "[object Array]") {
       for (i = 0; i < o.length; i++) {
         parts.push(stringify(o[i], visited));
       }
-      return '[' + parts.join(', ') + ']';
+      return "[" + parts.join(", ") + "]";
     }
 
     // Fake array â€“ very tricksy, get out quickly
@@ -77,12 +96,11 @@ var stringify = (function () {
       return type;
     }
 
-    var typeStr = type + ' ',
-        newBuffer = buffer + '  ';
+    var typeStr = type + " ",
+      newBuffer = buffer + "  ";
 
     // Dive down if we're less than 2 levels deep
     if (buffer.length / 2 < 2) {
-
       var names = [];
       // Some objects don't like 'in', so just skip them
       try {
@@ -94,16 +112,20 @@ var stringify = (function () {
       names.sort(sortci);
       for (i = 0; i < names.length; i++) {
         try {
-          parts.push(newBuffer + names[i] + ': ' + stringify(o[names[i]], visited, newBuffer));
+          parts.push(
+            newBuffer +
+              names[i] +
+              ": " +
+              stringify(o[names[i]], visited, newBuffer)
+          );
         } catch (e) {}
       }
-
     }
 
     // If nothing was gathered, return empty object
-    if (!parts.length) return typeStr + '{ ... }';
+    if (!parts.length) return typeStr + "{ ... }";
 
     // Return the indented object with new lines
-    return typeStr + '{\n' + parts.join(',\n') + '\n' + buffer + '}';
+    return typeStr + "{\n" + parts.join(",\n") + "\n" + buffer + "}";
   };
-}());
+})();

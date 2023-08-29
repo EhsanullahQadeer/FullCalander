@@ -1,206 +1,39 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title></title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="googlebot" content="noindex, nofollow" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://fullcalendar.io/releases/fullcalendar/3.9.0/lib/moment.min.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <title></title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://fullcalendar.io/releases/fullcalendar/3.9.0/lib/moment.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="./css/index.css" />
+  <script src="./js/stringify.js"></script>
+  <script src="./js/index.js"></script>
+  <script src="./js/intializeFullCalendar.js"></script>
+</head>
 
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    <script type="text/javascript" src="./js/lib/dummy.js"></script>
-    <link
-      rel="stylesheet"
-      href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"
-    />
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
-      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
-      crossorigin="anonymous"
-    />
-    <link rel="stylesheet" href="./css/index.css" />
-    <script src="./js/stringify.js"></script>
-    <script src="./js/index.js"></script>
-    <script>
-      if (window.parent) {
-        customConsole(window);
-      }
-      function togglePopup() {
-        $(".overlay").toggleClass("open");
-      }
-
-      $(function () {
-        $("#dialog").dialog({
-          autoOpen: false,
-        });
-      });
-    </script>
-  </head>
-  <body>
-    <p>&nbsp;</p>
-    <div class="container">
-      <!--Event Popup-->
-      <div id="dialog" title=""></div>
-
-      <div class="row">
-        <div class="col-md-12">
-          <div
-            id="iCalendar"
-            data-months='["January","February","March","April","May","June","July","August","September","October","November","December"]'
-            data-language="en"
-            data-self="0"
-          ></div>
-        </div>
+<body>
+  <p>&nbsp;</p>
+  <div class="container">
+    <!--Event Popup-->
+    <div id="dialog" title=""></div>
+    <div class="row">
+      <div class="col-md-12">
+        <div id="iCalendar"
+          data-months='["January","February","March","April","May","June","July","August","September","October","November","December"]'
+          data-language="en" data-self="0"></div>
       </div>
     </div>
+  </div>
+</body>
 
-    <script type="text/javascript">
-      //<![CDATA[
-
-      document.addEventListener("DOMContentLoaded", function () {
-        // get selected date from local storage
-        let defMonth = window.localStorage.getItem("selectedMonth");
-        let defYear = window.localStorage.getItem("selectedYear");
-        let defaultDate;
-        // to use this anywhere instead getting multiple time from local storage
-        if (defMonth && defMonth) {
-          window.defMonth = defMonth;
-          window.defYear = defYear;
-          defaultDate = `${defYear}-${defMonth}-01`;
-        }
-
-        var calendarEl = document.getElementById("iCalendar");
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: "dayGridMonth",
-          headerToolbar: {
-            right: "prev,next today",
-          },
-          ...(defaultDate && { initialDate: defaultDate }),
-          navLinks: true, // can click day/week names to navigate views
-          selectable: true,
-          selectMirror: true,
-          showNonCurrentDates: true,
-          longPressDelay: 1,
-          dayMaxEvents: true, // allow "more" link when too many events,
-          events: jsonData.events,
-          eventClick: function (info) {
-            handleEventPopup(info);
-          },
-
-          droppable: false,
-          editable: true,
-          locale: $("#iCalendar").attr("data-language"),
-          selectAllow: function (info) {
-            return info.start >= getDateWithoutTime(new Date());
-          },
-        });
-        window.calendar = calendar;
-        calendar.render();
-        $(".fc-header-toolbar").children().eq(0).prepend(gotoDrop());
-        // $('.fc-header-toolbar').children().eq(1).html(sHtml);
-        $(".fc-today-button").click(function () {
-          let chDt = calendar.getDate();
-          let y = chDt.getFullYear();
-          let m = ("0" + (chDt.getMonth() + 1)).slice(-2);
-          $("#month").val(m);
-          $("#year").val(y);
-        });
-      });
-
-      function gotoDrop() {
-        let sHtml = "";
-        sHtml += '<div id="goto">';
-        let d = new Date();
-        console.log(window?.defMonth);
-        let m;
-        if (window?.defMonth) {
-          m = parseInt(window?.defMonth) - 1;
-        } else {
-          m = d.getMonth();
-        }
-        let y = window?.defYear || d.getFullYear();
-        var aMonth = JSON.parse($("#iCalendar").attr("data-months"));
-        sHtml +=
-          '<label  for="styledSelect1"><select onchange="handleMonthChange(this)" class="select_month form-control text ui-widget-content ui-corner-all" name="month" id="month">';
-        $.each(aMonth, function (k, v) {
-          sHtml +=
-            "<option " +
-            (k == m ? "selected" : "") +
-            ' value="' +
-            ("0" + (k + 1)).slice(-2) +
-            '">' +
-            v +
-            "</option>";
-        });
-        sHtml += "</select></label>";
-        sHtml +=
-          '<label  for="styledSelect1" style="margin-left:10px;min-width:120px;"><select onChange="handleYearChange(this)" class="form-control select_year text ui-widget-content ui-corner-all" name="year" id="year">';
-        $.each(yearRange(), function (k, v) {
-          sHtml +=
-            "<option " +
-            (v.t == y ? "selected" : "") +
-            ' value="' +
-            v.v +
-            '">' +
-            v.t +
-            "</option>";
-        });
-        sHtml += "</select></label>";
-
-        sHtml += "</div>";
-        return sHtml;
-      }
-
-      function getDateWithoutTime(dt) {
-        dt.setHours(0, 0, 0, 0);
-        return dt;
-      }
-
-      /* Return.php */
-
-      //]]>
-    </script>
-
-    <script>
-      // tell the embed parent frame the height of the content
-      if (window.parent && window.parent.parent) {
-        window.parent.parent.postMessage(
-          [
-            "resultsFrame",
-            {
-              height: document.body.getBoundingClientRect().height,
-              slug: "a54k0fre",
-            },
-          ],
-          "*"
-        );
-      }
-
-      // always overwrite window.name, in case users try to set it manually
-      window.name = "result";
-    </script>
-
-    <script>
-      let allLines = [];
-
-      window.addEventListener("message", (message) => {
-        if (message.data.console) {
-          let insert = document.querySelector("#insert");
-          allLines.push(message.data.console.payload);
-          insert.innerHTML = allLines.join(";\r");
-
-          let result = eval.call(null, message.data.console.payload);
-          if (result !== undefined) {
-            console.log(result);
-          }
-        }
-      });
-    </script>
-  </body>
 </html>

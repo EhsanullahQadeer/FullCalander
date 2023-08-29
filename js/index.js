@@ -153,16 +153,24 @@ const customConsole = (w) => {
   })(window.console);
 
   window.console = { ...window.console, ...console };
-
-  console.system("Running fiddle");
 };
+if (window.parent) {
+  customConsole(window);
+}
 
 //   ................................................................................
+// Event popup
+$(function () {
+  $("#dialog").dialog({
+    autoOpen: false,
+  });
+});
+
 // year range
 function yearRange() {
   var currentYear = new Date().getFullYear();
   var yearArray = [];
-  for (var i = currentYear; i <= currentYear + 5; i++) {
+  for (var i = currentYear; i <= currentYear + 10; i++) {
     yearArray.push({ t: i, v: i });
   }
   return yearArray;
@@ -171,8 +179,10 @@ function yearRange() {
 function handleMonthChange(select) {
   let selectedYear = parseInt($(".select_year").val());
   let selectedMonth = select.value;
-  window.localStorage.setItem("selectedMonth", selectedMonth);
   setDateToLocalStorage(selectedMonth, selectedYear);
+  // Remove the valid range for the calendar
+  window.calendar.setOption("validRange", null);
+  window.calendar.changeView("dayGridMonth", selectedMonth);
   window.calendar.gotoDate(selectedYear + "-" + selectedMonth + "-01");
 }
 // handle year change
@@ -180,6 +190,8 @@ function handleYearChange(select) {
   let selectedYear = parseInt(select.value);
   let selectedMonth = $(".select_month").val();
   setDateToLocalStorage(selectedMonth, selectedYear);
+  // Remove the valid range for the calendar
+  window.calendar.setOption("validRange", null);
   window.calendar.changeView("dayGridMonth", selectedMonth);
   window.calendar.gotoDate(selectedYear + "-" + selectedMonth + "-01");
 }
@@ -243,3 +255,82 @@ function handleEventPopup(info) {
   $("#dialog").html($eventTable);
   $("#dialog").dialog("open");
 }
+
+//
+$(function () {
+  var dateFormat = "mm/dd/yy",
+    from = $("#from")
+      .datepicker({
+        showWeek: true,
+        firstDay: 1,
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+      })
+      .on("change", function () {
+        to.datepicker("option", "minDate", getDate(this));
+        applyDateFilter();
+      }),
+    to = $("#to")
+      .datepicker({
+        defaultDate: "+1w",
+        showWeek: true,
+        firstDay: 1,
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+      })
+      .on("change", function () {
+        from.datepicker("option", "maxDate", getDate(this));
+        applyDateFilter();
+      });
+
+  function getDate(element) {
+    var date;
+    try {
+      date = $.datepicker.parseDate(dateFormat, element.value);
+    } catch (error) {
+      date = null;
+    }
+
+    return date;
+  }
+
+  function applyDateFilter() {
+    var fromDate = from.datepicker("getDate");
+    var toDate = to.datepicker("getDate");
+
+    var visibleWeeks = [];
+
+    if (fromDate && toDate) {
+      var currentDate = new Date(fromDate);
+      while (currentDate <= toDate) {
+        var weekStart = new Date(currentDate);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Go to the first day of the week
+        var weekEnd = new Date(currentDate);
+        weekEnd.setDate(weekEnd.getDate() - weekEnd.getDay() + 6); // Go to the last day of the week
+
+        visibleWeeks.push({ start: weekStart, end: weekEnd });
+
+        currentDate.setDate(currentDate.getDate() + 7); // Move to the next week
+      }
+    } else {
+      window.calendar.gotoDate(fromDate);
+      window.calendar.changeView("dayGridWeek");
+      return;
+    }
+
+    // Calculate the valid date range based on the selected date range
+    var validStart = visibleWeeks[0].start;
+    var validEnd = visibleWeeks[visibleWeeks.length - 1].end;
+
+    // Set the calendar's valid range
+    calendar.setOption("validRange", { start: validStart, end: validEnd });
+    // // Set the calendar's date to the start date of the selected range
+    calendar.render(); // Render the calendar
+
+    // Use the calendar's methods to change the date range being displayed
+    window.calendar.gotoDate(visibleWeeks[0].start);
+    window.calendar.changeView("dayGridWeek");
+  }
+});

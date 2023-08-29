@@ -39,3 +39,12 @@ body {
 .ui-widget-header {
   color: #fff;
 }
+.searchInput {
+  width: 120px;
+}
+.fc-toolbar-chunk:nth-child(2) {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
