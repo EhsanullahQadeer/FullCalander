@@ -16,7 +16,7 @@ async function fetchEvents(filter) {
       type: "GET",
       dataType: "json",
     });
-    jsonData.events = data;
+    if (data) jsonData.events = data;
     let paresedData = data.map((item) => {
       if (item.start && item.end) {
         item.start = formatDateToYYYYMMDD(item.end);
@@ -27,9 +27,7 @@ async function fetchEvents(filter) {
     // first clear all events
     calendar.removeAllEvents();
     window.calendar.addEventSource(paresedData);
-  } catch (error) {
-    console.error("Error:", error);
-  }
+  } catch (error) {}
 }
 // Call the function to fetch events
 
@@ -49,32 +47,39 @@ async function fetchEmployeesData() {
         }
       }
     })
-    .catch((error) => {
-      console.error("Error fetching JSON:", error);
-    });
+    .catch((error) => {});
   return jsonData;
 }
-
-function formatDateToYYYYMMDD(dateString) {
-  const parts = dateString.split("/");
-  let date = dateString;
-  if (parts.length === 3) {
-    var day = parts[0];
-    var month = parts[1];
-    var year = parts[2];
-    date = `${year}-${month}-${day}`;
-  }
-  return date;
-}
-
 //   ................................................................................
 //hnadle employee select change
-
-function handleEmployeeChange() {
-  let values=$('#employee').val();
-  // Write any logic as required here
+let recordPreStateOfEmploye;
+function handleEmployeeChange(select) {
+  let values = $("#employee").val();
+  !recordPreStateOfEmploye &&
+    (recordPreStateOfEmploye = localStorage.getItem("employee"));
+  // calling function
+  values = togleSelectALl(values, recordPreStateOfEmploye, select);
+  recordPreStateOfEmploye = values;
+  // Update the selected values
+  $(select).val(values);
+  $(select).selectpicker("refresh");
   localStorage.setItem("employeeId", values);
-  window.fetchFilterData()
+  window.fetchFilterData();
+}
+
+let recordPrevoiusValues;
+function handleProcessedChange(select) {
+  let values = $("#processed").val();
+  !recordPrevoiusValues &&
+    (recordPrevoiusValues = localStorage.getItem("processed"));
+  // calling function
+  values = togleSelectALl(values, recordPrevoiusValues, select);
+  recordPrevoiusValues = values;
+  // Update the selected values
+  $(select).val(values);
+  $(select).selectpicker("refresh");
+  localStorage.setItem("processed", values);
+  window.fetchFilterData();
 }
 
 // Event popup
@@ -128,7 +133,10 @@ function handleEventPopup(info) {
   });
   var $eventTable = $("<table>").attr("id", "eventTable");
   $("#dialog").dialog("option", "title", foundEvent?.title);
-  $(".ui-widget-header").css("background", `linear-gradient(to bottom, ${foundEvent?.color}, #f8f8ff)`);
+  $(".ui-widget-header").css(
+    "background",
+    `linear-gradient(to bottom, ${foundEvent?.color}, #f8f8ff)`
+  );
   for (var key in foundEvent) {
     //
     if (
@@ -152,11 +160,13 @@ function handleEventPopup(info) {
         // Adding a link button at the end
         var $linkRow = $("<tr>");
         var $linkCell = $("<td colspan='2'>");
-        var $linkButton = $("<button>").text("Link").css({
-          "background":`linear-gradient(to bottom, ${foundEvent?.color}, #f8f8ff)`,
-          color: "white",
-          border: foundEvent?.color,
-        });
+        var $linkButton = $("<button>")
+          .text("Link")
+          .css({
+            background: `linear-gradient(to bottom, ${foundEvent?.color}, #f8f8ff)`,
+            color: "white",
+            border: foundEvent?.color,
+          });
         var $linkAnchor = $("<a>")
           .attr("href", foundEvent.link) // Set the link URL
           .attr("target", "_blank") // Open link in new tab/window
@@ -169,10 +179,6 @@ function handleEventPopup(info) {
   if (foundEvent.hasOwnProperty("link")) {
     $eventTable.append($linkRow);
   }
-  // alert(
-  //   "Coordinates: " + info.jsEvent.pageX + "," + info.jsEvent.pageY
-  // );
-  // Append the table to the document
   $("#dialog").html($eventTable);
   $("#dialog").dialog("open");
 }
@@ -286,42 +292,55 @@ $(function () {
         multiMonthYearView.prepend(yearContainer);
       }
     };
-    // get data from server
     window.fetchFilterData = async function fetchFilterData() {
-      let searchFrom =localStorage.getItem("searchFrom")?.replace(/\//g, "-");
-      let searchTo = localStorage.getItem("searchTo")?.replace(/\//g, "-");
-      let employeeId = localStorage.getItem("employeeId");
-      let selectedMonth = localStorage.getItem("selectedMonth");
-      let selectedYear = localStorage.getItem("selectedYear");
+      // Retrieve data from localStorage
+      const searchFrom = localStorage
+        .getItem("searchFrom")
+        ?.replace(/\//g, "-");
+      const searchTo = localStorage.getItem("searchTo")?.replace(/\//g, "-");
+      const employeeId = localStorage.getItem("employeeId");
+      const processed = localStorage.getItem("processed");
+      const selectedMonth = localStorage.getItem("selectedMonth");
+      const selectedYear = localStorage.getItem("selectedYear");
+
+      // Calculate the default date
       let date;
-      
       if (selectedMonth && selectedYear) {
-        date = selectedYear + "-" + selectedMonth + "-01";
+        date = `${selectedYear}-${selectedMonth}-01`;
       } else {
-        let currentDate = new Date(); 
-        let currentyear= currentDate.getFullYear(); 
-        let currentMonth= currentDate.getMonth() + 1; 
-        date = currentyear + "-" + (currentMonth < 10 ? "0" : "") + currentMonth + "-01";
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        date = `${currentYear}-${currentMonth.toString().padStart(2, "0")}-01`;
       }
 
-      let filterQuery;
-      if (searchFrom && searchTo && employeeId) {
-        filterQuery = `?start=${searchFrom}&end=${searchTo}&id=${employeeId}`;
-      } else if (searchFrom && searchTo) {
-        filterQuery = `?start=${searchFrom}&end=${searchTo}`;
-      }
-      else if(employeeId){
-        filterQuery = `?id=${employeeId}`;
-      }
-      // for this implement filter in backend start >= date
-      else if (date) {
-        filterQuery = `?start=${date}`;
+      // Build the filter query based on available parameters
+      let filterQuery = "";
+      const queryParams = [];
+
+      if (searchFrom && searchTo) {
+        queryParams.push(`start=${searchFrom}&end=${searchTo}`);
       } else {
-        filterQuery = "";
+        if (date) {
+          queryParams.push(`start=${date}`);
+        }
       }
+
+      if (employeeId) {
+        queryParams.push(`id=${employeeId}`);
+      }
+
+      if (processed) {
+        queryParams.push(`processed=${processed}`);
+      }
+
+      if (queryParams.length > 0) {
+        filterQuery = `?${queryParams.join("&")}`;
+      }
+
+      // Fetch events using the constructed filter query
       await fetchEvents(filterQuery);
     };
-    //
     $(document).ready(async function () {
       await window.fetchFilterData();
       if (searchFrom && searchTo) {
@@ -349,6 +368,11 @@ function handleClear() {
   localStorage.removeItem("searchFrom");
   localStorage.removeItem("searchTo");
   localStorage.removeItem("employeeId");
-  $("#employee").val(jsonData.employees[0]?.id);
+  localStorage.removeItem("processed");
+  $("#employee").val([]);
+  $("#employee").selectpicker("refresh");
+  $("#processed").val([]);
+  $("#processed").selectpicker("refresh");
+
   window.fetchFilterData();
 }

@@ -93,33 +93,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     $("#month").val(m);
     $("#year").val(y);
   });
-
   $("#processed").selectpicker();
   $("#employee").selectpicker();
-
-  //
-  function changeValuesOfSelect() {
-    // var date = calendar.getDate();
-    // var year = date.getFullYear();
-    // var month = ("0" + (date.getMonth() + 1)).slice(-2);
-    // $(".select_month").val(month).trigger("change");
-    // $(".select_year").val(year).trigger("change");
-  }
-  $(".fc-prev-button").on("click", function () {
-    changeValuesOfSelect();
-  });
-  $(".fc-next-button").on("click", function () {
-    changeValuesOfSelect();
-
-    // var selectedYear = calendar.getDate().getFullYear();
-    // var currentYear = new Date().getFullYear();
-    // // Disable next button if range reaches certain limit
-    // if (selectedYear < currentYear + 9) {
-    //   calendar.setButtonDisabled("customNextButton", true);
-    // }
-  });
   //   this is beacuse above await takse some time so we hence to render this function after new fullcalendaer render
-  await window.renerTopSearch();
+  await window?.renerTopSearch();
 });
 //
 function gotoDrop() {
@@ -183,14 +160,12 @@ async function addEmployeeSelect() {
   let sHtml = '<div class="employee-select">';
   sHtml += '<label class="mb-0" for="styledSelect1">Employee</label>';
   sHtml +=
-    '<select onchange="handleEmployeeChange(this)" id="employee" multiple = "multiple" data-live-search="true">';
-  sHtml += `<option value=-1 ${
-    !employeeId || employeeId == -1 ? "selected" : ""
-  }>All</option>`;
+    '<select onchange="handleEmployeeChange(this)" title="Select Employee" id="employee" multiple = "multiple" data-live-search="true">';
+  sHtml += `<option value=-1 >All</option>`;
   employees?.forEach(function (employee, index) {
     sHtml +=
       `<option value=${employee?.id}  ${
-        employeeId.includes(employee?.id) ? "selected" : ""
+        employeeId?.includes(employee?.id) ? "selected" : ""
       }>` +
       employee?.name +
       "</option>";
@@ -203,13 +178,21 @@ async function addEmployeeSelect() {
 }
 
 function ProcessedSelect() {
+  let processed = localStorage.getItem("processed");
   return `
   <div class="processed-select">
   <label class="mb-0" for="processed">Processed</label>
-  <select id="processed"  multiple = "multiple" data-live-search="true">
-  <option value="0">Processed</option>
-    <option value="1">Submitted</option>
-    <option value="2">Complete</option>
+  <select onchange="handleProcessedChange(this)" id="processed"  multiple = "multiple" title="Select Processed" data-live-search="true">
+  <option value=-1>All</option>
+  <option ${
+    processed?.includes(0) ? "selected" : ""
+  }  value="0">Processed</option>
+    <option ${
+      processed?.includes(1) ? "selected" : ""
+    } value="1">Submitted</option>
+    <option ${
+      processed?.includes(2) ? "selected" : ""
+    } value="2">Complete</option>
   </select>
   </div>
   `;

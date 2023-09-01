@@ -45,7 +45,7 @@ body {
 .searchInput {
   width: 120px;
 }
-.search-flex{
+.search-flex {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -71,24 +71,25 @@ body {
   color: red;
   font-weight: 700;
 }
-.employee-select{
+.employee-select {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
 }
-.processed-select{
-display: flex;
-column-gap: 10px;
-align-items: center;
+.processed-select {
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
 }
-.selector-wrapper{
+.selector-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 30px;
 }
-.bootstrap-select:not([class*="col-"]):not([class*="form-control"]):not(.input-group-btn){
+.bootstrap-select:not([class*="col-"]):not([class*="form-control"]):not(
+    .input-group-btn
+  ) {
   width: 150px;
 }
-
