@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       var eventTitle = $("<div>").text(arg.event.title);
       eventTitle.css({
         background: `linear-gradient(to bottom, ${eventBackgroundColor}, #f8f8ff)`,
-        color: "white",
+        // color: "white",
         "border-color": eventBackgroundColor,
       });
 
@@ -93,8 +93,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     $("#month").val(m);
     $("#year").val(y);
   });
-  $("#processed").selectpicker();
-  $("#employee").selectpicker();
   //   this is beacuse above await takse some time so we hence to render this function after new fullcalendaer render
   await window?.renerTopSearch();
 });

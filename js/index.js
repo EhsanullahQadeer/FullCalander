@@ -8,6 +8,7 @@ let jsonData = {
 let holdPreviousYearView;
 
 async function fetchEvents(filter) {
+  debugger
   let params = filter ? filter : "";
   try {
     // Make the fetch request
@@ -39,8 +40,11 @@ async function fetchEmployeesData() {
         // Extract JSON part from the response using string manipulation
         var startIndex = text.indexOf("[{");
         var endIndex = text.lastIndexOf("}]") + 2;
+        if (startIndex == -1 || endIndex == -1) {
+          return;
+        }
         var jsonPart = text.substring(startIndex, endIndex).trim();
-        if (jsonPart.length > 0) {
+        if (jsonPart.length > 4) {
           // Parse the extracted JSON
           var newData = JSON.parse(jsonPart);
           jsonData.employees.push(...newData);
@@ -62,7 +66,6 @@ function handleEmployeeChange(select) {
   recordPreStateOfEmploye = values;
   // Update the selected values
   $(select).val(values);
-  $(select).selectpicker("refresh");
   localStorage.setItem("employeeId", values);
   window.fetchFilterData();
 }
@@ -77,7 +80,6 @@ function handleProcessedChange(select) {
   recordPrevoiusValues = values;
   // Update the selected values
   $(select).val(values);
-  $(select).selectpicker("refresh");
   localStorage.setItem("processed", values);
   window.fetchFilterData();
 }
@@ -370,9 +372,7 @@ function handleClear() {
   localStorage.removeItem("employeeId");
   localStorage.removeItem("processed");
   $("#employee").val([]);
-  $("#employee").selectpicker("refresh");
   $("#processed").val([]);
-  $("#processed").selectpicker("refresh");
 
   window.fetchFilterData();
 }
