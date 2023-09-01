@@ -16,16 +16,61 @@ document.addEventListener("DOMContentLoaded", async function () {
       right: "prev,next today dayGridMonth,dayGridWeek",
     },
     ...(defaultDate && { initialDate: defaultDate }),
-    navLinks: true, // can click day/week names to navigate views
+    navLinks: true,
     selectable: true,
     selectMirror: true,
     showNonCurrentDates: true,
     longPressDelay: 1,
     dayMaxEvents: true, // allow "more" link when too many events,
-    events:await fetchCalendarData(),
+    events: jsonData.events,
     eventClick: function (info) {
       handleEventPopup(info);
     },
+    eventContent: function (arg) {
+      var eventBackgroundColor = arg.backgroundColor;
+
+      var eventTitle = $("<div>").text(arg.event.title);
+      eventTitle.css({
+        background: `linear-gradient(to bottom, ${eventBackgroundColor}, #f8f8ff)`,
+        color: "white",
+        "border-color": eventBackgroundColor,
+      });
+
+      return { domNodes: eventTitle };
+    },
+
+    dayCellClassNames: function (arg) {
+      let { date } = arg;
+      var classNames = [];
+
+      var dayOfWeek = new Date(date);
+      var dayName = dayOfWeek.toLocaleDateString("en-US", { weekday: "long" });
+      var isWeekday = dayName == "Sunday" || dayName == "Saturday";
+      if (isWeekday) {
+        classNames.push("week-days");
+      }
+
+      var date2 = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() + 1
+      );
+      //This gives the next day of the clicked day('date' contains the clicked day)
+
+      var todaysEvents = calendar.getEvents();
+      if (todaysEvents) {
+        todaysEvents = todaysEvents.filter(
+          (event) => event.start >= date && event.start < date2
+        );
+        if (!(todaysEvents && todaysEvents.length > 0)) {
+          classNames.push("no-events");
+        }
+      } else {
+        classNames = ["no-events"];
+      }
+      return classNames;
+    },
+
     droppable: false,
     editable: true,
     locale: $("#iCalendar").attr("data-language"),
@@ -37,6 +82,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   calendar.render();
   $(".fc-header-toolbar").children().eq(0).prepend(gotoDrop());
   $(".fc-header-toolbar").children().eq(1).html(addSerachByWeek());
+  var combinedDiv = $("<div class='selector-wrapper'>");
+  combinedDiv.append(await addEmployeeSelect());
+  combinedDiv.append(ProcessedSelect());
+  $(".fc-header-toolbar").children().eq(1).append(combinedDiv);
   $(".fc-today-button").click(function () {
     let chDt = calendar.getDate();
     let y = chDt.getFullYear();
@@ -44,6 +93,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     $("#month").val(m);
     $("#year").val(y);
   });
+
+  $("#processed").selectpicker();
+  $("#employee").selectpicker();
+
   //
   function changeValuesOfSelect() {
     // var date = calendar.getDate();
@@ -60,14 +113,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // var selectedYear = calendar.getDate().getFullYear();
     // var currentYear = new Date().getFullYear();
-    // debugger;
     // // Disable next button if range reaches certain limit
     // if (selectedYear < currentYear + 9) {
     //   calendar.setButtonDisabled("customNextButton", true);
     // }
   });
-//   this is beacuse above await takse some time so we hace to render this function after new fullcalendaer render
-  await window.renerTopSearch()
+  //   this is beacuse above await takse some time so we hence to render this function after new fullcalendaer render
+  await window.renerTopSearch();
 });
 //
 function gotoDrop() {
@@ -114,16 +166,57 @@ function gotoDrop() {
 }
 
 function addSerachByWeek() {
-  return `<label for="from">From</label>
+  return `<div class="search-flex"><label for="from">From</label>
 <input autocomplete="off" class='form-control searchInput' type="text" id="from" name="from" />
 <label for="to">to</label>
-<input autocomplete="off" class='form-control searchInput' type="text" id="to" name="to" />`;
+<input autocomplete="off" class='form-control searchInput' type="text" id="to" name="to" />
+<button class="search-btns fc-button fc-button-primary" onclick="handleSearch()">Search</button>
+<button class="search-btns fc-button fc-button-primary" onclick="handleClear()">Clear</button>
+</div>
+`;
+}
+
+async function addEmployeeSelect() {
+  let employees = (await fetchEmployeesData())?.employees;
+  let employeeId = localStorage.getItem("employeeId");
+
+  let sHtml = '<div class="employee-select">';
+  sHtml += '<label class="mb-0" for="styledSelect1">Employee</label>';
+  sHtml +=
+    '<select onchange="handleEmployeeChange(this)" id="employee" multiple = "multiple" data-live-search="true">';
+  sHtml += `<option value=-1 ${
+    !employeeId || employeeId == -1 ? "selected" : ""
+  }>All</option>`;
+  employees?.forEach(function (employee, index) {
+    sHtml +=
+      `<option value=${employee?.id}  ${
+        employeeId.includes(employee?.id) ? "selected" : ""
+      }>` +
+      employee?.name +
+      "</option>";
+  });
+
+  sHtml += "</select>";
+  sHtml += "</div>";
+
+  return sHtml;
+}
+
+function ProcessedSelect() {
+  return `
+  <div class="processed-select">
+  <label class="mb-0" for="processed">Processed</label>
+  <select id="processed"  multiple = "multiple" data-live-search="true">
+  <option value="0">Processed</option>
+    <option value="1">Submitted</option>
+    <option value="2">Complete</option>
+  </select>
+  </div>
+  `;
+  // `;
 }
 
 function getDateWithoutTime(dt) {
   dt.setHours(0, 0, 0, 0);
   return dt;
 }
-
-
-

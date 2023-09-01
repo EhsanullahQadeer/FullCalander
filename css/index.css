@@ -39,16 +39,56 @@ body {
 .ui-widget-header {
   color: #fff;
 }
-.fc .fc-toolbar.fc-header-toolbar{
-    align-items: end;
+.fc .fc-toolbar.fc-header-toolbar {
+  align-items: end;
 }
 .searchInput {
   width: 120px;
+}
+.search-flex{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: 15px;
 }
 .fc-toolbar-chunk:nth-child(2) {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 70px;
+  flex-direction: column;
+  row-gap: 50px;
 }
+/* 
+ */
+.no-events .fc-daygrid-day-number {
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none;
+  color: inherit;
+}
+.week-days {
+  color: red;
+  font-weight: 700;
+}
+.employee-select{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.processed-select{
+display: flex;
+column-gap: 10px;
+align-items: center;
+}
+.selector-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+.bootstrap-select:not([class*="col-"]):not([class*="form-control"]):not(.input-group-btn){
+  width: 150px;
+}
+
