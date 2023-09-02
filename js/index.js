@@ -128,7 +128,9 @@ function setDateToLocalStorage(selectedMonth, selectedYear) {
 }
 // Event Popup
 function handleEventPopup(info) {
-  let id = info.event._def.publicId;
+  debugger
+  // let id = info.event._def.publicId;
+  let id = info.event.id;
   var foundEvent = jsonData.events.find(function (event) {
     return event.id == id;
   });
@@ -253,19 +255,41 @@ $(function () {
       window.calendar.changeView("multiMonthYear");
 
       // change tolbar grid stack only if search lies in the same year
-      debugger
       if (fromDate.getFullYear() == toDate.getFullYear()) {
         calendar.setOption("headerToolbar", {
-          right: "multiMonthYearGrid,multiMonthYearStack,dayGridYear",
+          right: "multiMonthYearGrid,multiMonthYearStack",
         });
-      }else{
+        // bind click listner on stack
+        $(".fc-multiMonthYearStack-button").on("click", function () {
+          window.calendar.setOption("multiMonthMaxColumns", 1);
+        });
+        // bind click listner on grid
+        $(".fc-multiMonthYearGrid-button").on("click", function () {
+          const monthDifference =
+            (toDate.getFullYear() - fromDate.getFullYear()) * 12 +
+            (toDate.getMonth() - fromDate.getMonth());
+          if (monthDifference === 0) {
+            window.calendar.setOption("multiMonthMaxColumns", 1);
+          } else {
+            window.calendar.setOption("multiMonthMaxColumns", 2);
+          }
+        });
+      } else {
         calendar.setOption("headerToolbar", {
           right: "prev,next today dayGridMonth,dayGridWeek",
         });
       }
+      // This check is for intially
+      const monthDifference =
+        (toDate.getFullYear() - fromDate.getFullYear()) * 12 +
+        (toDate.getMonth() - fromDate.getMonth());
+      if (monthDifference === 0) {
+        window.calendar.setOption("multiMonthMaxColumns", 1);
+      } else {
+        window.calendar.setOption("multiMonthMaxColumns", 2);
+      }
 
       window.calendar.gotoDate(fromDate.getFullYear() + "-" + "01" + "-01");
-
       var multiMonthYearView = $(".fc-multiMonthYear-view");
 
       // Select child elements within the parent container
@@ -281,14 +305,7 @@ $(function () {
           $(element).css("display", "none");
         }
       });
-      const monthDifference =
-        (toDate.getFullYear() - fromDate.getFullYear()) * 12 +
-        (toDate.getMonth() - fromDate.getMonth());
-      if (monthDifference === 0) {
-        window.calendar.setOption("multiMonthMaxColumns", 1);
-      } else {
-        window.calendar.setOption("multiMonthMaxColumns", 2);
-      }
+
       holdPreviousYearView = multiMonthYearView.clone();
 
       // its means range lies between 2 years so, we also have render months for next year
@@ -380,6 +397,10 @@ function handleSearch() {
 function handleClear() {
   // render month view
   let selectedMonth = $(".select_month").val();
+  // Replace tolbar rigth to intially
+  calendar.setOption("headerToolbar", {
+    right: "prev,next today dayGridMonth,dayGridWeek",
+  });
   handleMonthChange(selectedMonth);
   $("#from").val("");
   $("#to").val("");

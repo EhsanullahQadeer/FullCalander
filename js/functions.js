@@ -38,3 +38,5 @@ function togleSelectALl(values, recordPrevoiusValues,select) {
 
   return values;
 }
+// 
+// Add a click event listener to the header buttons

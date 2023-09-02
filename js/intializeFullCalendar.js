@@ -17,18 +17,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     },
     views: {
       multiMonthYearGrid: {
-          type: "multiMonthYear",
-          buttonText: "Grid"
+        type: "multiMonthYear",
+        buttonText: "Grid",
       },
       multiMonthYearStack: {
-          type: "multiMonthYear",
-          buttonText: "Stack",
-          multiMonthMaxColumns: 1
+        type: "multiMonthYear",
+        buttonText: "Stack",
+        multiMonthMaxColumns: 1,
       },
       dayGridYear: {
-          buttonText: "Continuous"
-      }
-  },
+        buttonText: "Continuous",
+      },
+    },
     ...(defaultDate && { initialDate: defaultDate }),
     navLinks: true,
     selectable: true,
@@ -37,13 +37,24 @@ document.addEventListener("DOMContentLoaded", async function () {
     longPressDelay: 1,
     dayMaxEvents: true, // allow "more" link when too many events,
     events: jsonData.events,
-    eventClick: function (info) {
-      handleEventPopup(info);
-    },
+    // eventClick: function (info) {
+    //   handleEventPopup(info);
+    // },
     eventContent: function (arg) {
       var eventBackgroundColor = arg.backgroundColor;
 
-      var eventTitle = $("<div>").text(arg.event.title);
+      // var eventTitle = $("<div class='event-div'>").text(arg.event.title);
+      // Serialize the 'arg' data as a JSON string and store it in a data attribute
+      var eventTitle = $("<div data-arg='" + JSON.stringify(arg) + "'>").text(
+        arg.event.title
+      );
+
+      // Add a click event listener to the element
+      eventTitle.on("click", function () {
+        var serializedArg = $(this).data("arg");
+        handleEventPopup(serializedArg);
+      });
+
       eventTitle.css({
         background: `linear-gradient(to bottom, ${eventBackgroundColor}, #f8f8ff)`,
         // color: "white",
