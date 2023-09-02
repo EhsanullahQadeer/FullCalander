@@ -93,3 +93,10 @@ body {
   ) {
   width: 150px;
 }
+/* .fc .fc-multimonth div {
+  flex: 1;
+  flex-wrap: wrap !important;
+}
+.fc-multimonth-month {
+  width: auto !important;
+} */

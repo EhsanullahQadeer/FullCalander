@@ -8,7 +8,6 @@ let jsonData = {
 let holdPreviousYearView;
 
 async function fetchEvents(filter) {
-  debugger
   let params = filter ? filter : "";
   try {
     // Make the fetch request
@@ -252,12 +251,26 @@ $(function () {
       fromDate.setDate(1);
       toDate.setDate(1);
       window.calendar.changeView("multiMonthYear");
+
+      // change tolbar grid stack only if search lies in the same year
+      debugger
+      if (fromDate.getFullYear() == toDate.getFullYear()) {
+        calendar.setOption("headerToolbar", {
+          right: "multiMonthYearGrid,multiMonthYearStack,dayGridYear",
+        });
+      }else{
+        calendar.setOption("headerToolbar", {
+          right: "prev,next today dayGridMonth,dayGridWeek",
+        });
+      }
+
       window.calendar.gotoDate(fromDate.getFullYear() + "-" + "01" + "-01");
 
       var multiMonthYearView = $(".fc-multiMonthYear-view");
 
       // Select child elements within the parent container
       var childElements = multiMonthYearView.children();
+
       childElements.each(function (index, element) {
         var dataDateValue = $(element).data("date").split("-");
         let dataMonth = new Date(dataDateValue);
@@ -268,6 +281,14 @@ $(function () {
           $(element).css("display", "none");
         }
       });
+      const monthDifference =
+        (toDate.getFullYear() - fromDate.getFullYear()) * 12 +
+        (toDate.getMonth() - fromDate.getMonth());
+      if (monthDifference === 0) {
+        window.calendar.setOption("multiMonthMaxColumns", 1);
+      } else {
+        window.calendar.setOption("multiMonthMaxColumns", 2);
+      }
       holdPreviousYearView = multiMonthYearView.clone();
 
       // its means range lies between 2 years so, we also have render months for next year

@@ -15,6 +15,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     headerToolbar: {
       right: "prev,next today dayGridMonth,dayGridWeek",
     },
+    views: {
+      multiMonthYearGrid: {
+          type: "multiMonthYear",
+          buttonText: "Grid"
+      },
+      multiMonthYearStack: {
+          type: "multiMonthYear",
+          buttonText: "Stack",
+          multiMonthMaxColumns: 1
+      },
+      dayGridYear: {
+          buttonText: "Continuous"
+      }
+  },
     ...(defaultDate && { initialDate: defaultDate }),
     navLinks: true,
     selectable: true,
