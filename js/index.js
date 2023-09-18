@@ -16,17 +16,52 @@ async function fetchEvents(filter) {
       type: "GET",
       dataType: "json",
     });
-    if (data) jsonData.events = data;
-    let paresedData = data.map((item) => {
-      if (item.start && item.end) {
-        item.start = formatDateToYYYYMMDD(item.end);
-        item.end = formatDateToYYYYMMDD(item.end);
-      }
-      return item;
-    });
+    if (data) {
+      data[0].user_details.forEach(element => {
+       let userHolidays= element?.user_holidays.map(item => {
+          if (item.start && item.end) {
+            // Getting AM/PM
+            item.sTime = getTimeFromDate(item.start);
+            item.eTime = getTimeFromDate(item.end);
+            //
+            item.start = formatDateToYYYYMMDD(item.start);
+            item.end = formatDateToYYYYMMDD(item.end);
+            item.eventType = "userHolidays";
+          }
+          return item;
+        });
+       delete element?.user_holidays;
+        jsonData.events.push(element,...userHolidays)
+      });
+    }
+    // comapny holidays
+    if (data[0].company_holidays) {
+      let companyHolidays = data[0].company_holidays.map((item) => {
+        if (item.start && item.end) {
+          // Getting AM/PM
+          item.sTime = getTimeFromDate(item.start);
+          item.eTime = getTimeFromDate(item.end);
+          //
+          item.start = formatDateToYYYYMMDD(item.start);
+          item.end = formatDateToYYYYMMDD(item.end);
+          item.eventType = "companyHolidays";
+        }
+        return item;
+      });
+      jsonData.events.push(...companyHolidays);
+    }
+
+    // let paresedData = data.map((item) => {
+    //   if (item.start && item.end) {
+    //     item.start = formatDateToYYYYMMDD(item.end);
+    //     item.end = formatDateToYYYYMMDD(item.end);
+    //   }
+    //   return item;
+    // });
+
     // first clear all events
     calendar.removeAllEvents();
-    window.calendar.addEventSource(paresedData);
+    window.calendar.addEventSource(jsonData.events);
   } catch (error) {}
 }
 // Call the function to fetch events
@@ -53,6 +88,7 @@ async function fetchEmployeesData() {
     .catch((error) => {});
   return jsonData;
 }
+
 //   ................................................................................
 //hnadle employee select change
 let recordPreStateOfEmploye;
@@ -65,6 +101,7 @@ function handleEmployeeChange(select) {
   recordPreStateOfEmploye = values;
   // Update the selected values
   $(select).val(values);
+  $(select).select2();
   localStorage.setItem("employeeId", values);
   window.fetchFilterData();
 }
@@ -79,7 +116,22 @@ function handleProcessedChange(select) {
   recordPrevoiusValues = values;
   // Update the selected values
   $(select).val(values);
+  $(select).select2();
   localStorage.setItem("processed", values);
+  window.fetchFilterData();
+}
+
+let workPreValues;
+function handleTypeOfWorkChange(select) {
+  let values = $("#typeOfWork").val();
+  !workPreValues && (workPreValues = localStorage.getItem("typeOfWork"));
+  // calling function
+  values = togleSelectALl(values, workPreValues, select);
+  workPreValues = values;
+  // Update the selected values
+  $(select).val(values);
+  $(select).select2();
+  localStorage.setItem("typeOfWork", values);
   window.fetchFilterData();
 }
 
@@ -128,25 +180,32 @@ function setDateToLocalStorage(selectedMonth, selectedYear) {
 }
 // Event Popup
 function handleEventPopup(info) {
-  debugger
-  // let id = info.event._def.publicId;
   let id = info.event.id;
   var foundEvent = jsonData.events.find(function (event) {
     return event.id == id;
   });
   var $eventTable = $("<table>").attr("id", "eventTable");
+
   $("#dialog").dialog("option", "title", foundEvent?.title);
+
+  $(".ui-dialog-title").find(".custom-title").remove();
+  if (foundEvent?.icon) {
+    var image = $("<img class='work-icon'>").attr("src", foundEvent?.icon);
+    $(".ui-dialog-title").prepend(image);
+  }
+
   $(".ui-widget-header").css(
     "background",
     `linear-gradient(to bottom, ${foundEvent?.color}, #f8f8ff)`
   );
+  var excludedProperties = ["title", "color", "id", "link", "icon"];
   for (var key in foundEvent) {
     //
     if (
       foundEvent.hasOwnProperty(key) &&
-      key != "title" &&
-      key != "color" &&
-      key != "id"
+      excludedProperties.indexOf(key) === -1 &&
+      typeof foundEvent[key] !== "object" &&
+      !Array.isArray(foundEvent[key])
     ) {
       if (key != "link") {
         let text = key;
@@ -340,6 +399,7 @@ $(function () {
       const searchTo = localStorage.getItem("searchTo")?.replace(/\//g, "-");
       const employeeId = localStorage.getItem("employeeId");
       const processed = localStorage.getItem("processed");
+      const typeOfWork = localStorage.getItem("typeOfWork");
       const selectedMonth = localStorage.getItem("selectedMonth");
       const selectedYear = localStorage.getItem("selectedYear");
 
@@ -373,6 +433,9 @@ $(function () {
       if (processed) {
         queryParams.push(`processed=${processed}`);
       }
+      if (typeOfWork) {
+        queryParams.push(`typeOfWork=${typeOfWork}`);
+      }
 
       if (queryParams.length > 0) {
         filterQuery = `?${queryParams.join("&")}`;
@@ -381,6 +444,7 @@ $(function () {
       // Fetch events using the constructed filter query
       await fetchEvents(filterQuery);
     };
+
     $(document).ready(async function () {
       await window.fetchFilterData();
       if (searchFrom && searchTo) {
@@ -413,8 +477,12 @@ function handleClear() {
   localStorage.removeItem("searchTo");
   localStorage.removeItem("employeeId");
   localStorage.removeItem("processed");
+  localStorage.removeItem("processed");
   $("#employee").val([]);
   $("#processed").val([]);
+  $("#typeOfWork").val([]);
+  // reintialized
+  $(".select2").select2();
 
   window.fetchFilterData();
 }

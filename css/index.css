@@ -59,28 +59,109 @@ body {
   flex-direction: column;
   row-gap: 50px;
 }
-/* 
- */
+
 .no-events .fc-daygrid-day-number {
   pointer-events: none;
   cursor: default;
   text-decoration: none;
   color: inherit;
 }
+/* overwriting fullcalendar css */
+.disableEventLink .fc-daygrid-day-events {
+  margin: 0 !important;
+}
+.disableEventLink .fc-event {
+  margin: 0 !important;
+  position: unset !important;
+  border: none !important;
+}
+.disableEventLink .fc-event-main,
+.fc-daygrid-event-harness {
+  position: unset !important;
+}
+.disableEventLink .fc-daygrid-day-events {
+  position: absolute !important;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+ .addFullDayHoliday {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  overflow: hidden;
+  background-color: transparent;
+  cursor: default;
+}
+.leftPart,
+.rightPart {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  cursor: default;
+}
+.leftPart {
+  background-color: #fff;
+  clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
+}
+.leftPart::after {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-color: #000;
+  clip-path: polygon(100% -.5%, 100% 100%, -.5% 100%);
+}
+
+.rightPart {
+  background-color:#fff;
+  clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
+}
+.rightPart::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-color: #000;
+  clip-path: polygon(0% 0%, 100% .5%, .5% 100%);
+}
+
+.leftPart div {
+  position: absolute;
+  left: 20%;
+  top: 25%;
+  color: red;
+  font-weight: 700;
+  font-size: 17px;
+}
+.rightPart div {
+  position: absolute;
+  right: 20%;
+  top: 50%;
+  color: red;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.disableEventLink .fc-daygrid-day-number {
+  display: none;
+}
+.enable-link .fc-daygrid-day-number{
+  display: block;
+}
+
 .week-days {
   color: red;
   font-weight: 700;
 }
-.employee-select {
+.employee-select,
+.processed-select,
+.typeOfWork-select {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
-}
-.processed-select {
-  display: flex;
-  column-gap: 10px;
-  align-items: center;
 }
 .selector-wrapper {
   display: flex;
@@ -93,10 +174,69 @@ body {
   ) {
   width: 150px;
 }
-/* .fc .fc-multimonth div {
-  flex: 1;
-  flex-wrap: wrap !important;
+.container {
+  max-width: 90%;
 }
-.fc-multimonth-month {
-  width: auto !important;
-} */
+.work-icon {
+  height: 25;
+  width: 25px;
+  margin-right: 5px;
+}
+
+.fw-700{
+  font-weight: 700;
+}
+/* Color Classes */
+.red { color: red; }
+.blue { color: blue; }
+.green { color: green; }
+.yellow { color: yellow; }
+.orange { color: orange; }
+.purple { color: purple; }
+.pink { color: pink; }
+.brown { color: brown; }
+.black { color: black; }
+.white { color: white; }
+.gray { color: gray; }
+.silver { color: silver; }
+.gold { color: gold; }
+.cyan { color: cyan; }
+.magenta { color: magenta; }
+.lavender { color: lavender; }
+.teal { color: teal; }
+.olive { color: olive; }
+.salmon { color: salmon; }
+.mint { color: mint; }
+.ruby { color: ruby; }
+.plum { color: plum; }
+.navy { color: navy; }
+.maroon { color: maroon; }
+.indigo { color: indigo; }
+.khaki { color: khaki; }
+.beige { color: beige; }
+.violet { color: violet; }
+.turquoise { color: turquoise; }
+.orchid { color: orchid; }
+
+/* Additional Color Classes */
+.aqua { color: aqua; }
+.chartreuse { color: chartreuse; }
+.crimson { color: crimson; }
+.darkorange { color: darkorange; }
+.deepskyblue { color: deepskyblue; }
+.fuchsia { color: fuchsia; }
+.indianred { color: indianred; }
+.lawngreen { color: lawngreen; }
+.lightcoral { color: lightcoral; }
+.lightsalmon { color: lightsalmon; }
+.mediumseagreen { color: mediumseagreen; }
+.olivedrab { color: olivedrab; }
+.orangered { color: orangered; }
+.slateblue { color: slateblue; }
+.springgreen { color: springgreen; }
+.steelblue { color: steelblue; }
+.tomato { color: tomato; }
+.yellowgreen { color: yellowgreen; }
+
+
+

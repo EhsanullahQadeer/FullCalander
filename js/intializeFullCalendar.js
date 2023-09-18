@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", async function () {
+  // This is logic for to make event popup workable when search range is between 2 years
+  $("body").on("click", function (event) {
+    // Event handler logic here
+    const clickedElement = event.target;
+    let data = clickedElement?.dataset?.arg;
+    if (data) {
+      data = JSON.parse(data);
+      handleEventPopup(data);
+    }
+  });
   // get selected date from local storage
   let defMonth = window.localStorage.getItem("selectedMonth");
   let defYear = window.localStorage.getItem("selectedYear");
@@ -37,31 +47,66 @@ document.addEventListener("DOMContentLoaded", async function () {
     longPressDelay: 1,
     dayMaxEvents: true, // allow "more" link when too many events,
     events: jsonData.events,
-    // eventClick: function (info) {
-    //   handleEventPopup(info);
-    // },
     eventContent: function (arg) {
-      var eventBackgroundColor = arg.backgroundColor;
+      let event = arg.event;
+      let extendedProps = event.extendedProps;
+      let addEvent;
+      let { start, end } = event._instance.range;
+      if (extendedProps?.eventType == "companyHolidays") {
+        if (extendedProps?.sTime != "AMPM") {
+          let html = "";
+          const timeDifference = end - start;
+          const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
+          if (daysDifference == 1) {
+            if (extendedProps?.sTime == "AM" && extendedProps?.eTime == "AM") {
+              // its means half day holiday
+              html =  $(`<div title=${event._def.title} class="leftPart"><div>AM</div></div>`);
+            } else if (
+              extendedProps?.sTime == "PM" &&
+              extendedProps?.eTime == "PM"
+            ) {
+              html = $(`<div title=${event._def.title}  class="rightPart"><div>PM</div></div>`);
+            }
+          }
+          addEvent=html
+        } else {
+          addEvent = $(
+            `<div title=${event._def.title} class='addFullDayHoliday'></div>`
+          );
+        }
+      }else if(extendedProps?.eventType == "userHolidays"){
+        debugger
 
-      // var eventTitle = $("<div class='event-div'>").text(arg.event.title);
-      // Serialize the 'arg' data as a JSON string and store it in a data attribute
-      var eventTitle = $("<div data-arg='" + JSON.stringify(arg) + "'>").text(
-        arg.event.title
-      );
+      } else {
+        var eventBackgroundColor = arg.backgroundColor;
+        var eventTitle = $("<div data-arg='" + JSON.stringify(arg) + "'>").text(
+          arg.event.title
+        );
+        if (arg.event.extendedProps.icon) {
+          // Create an image element
+          var eventImage = $("<img class='work-icon'>").attr(
+            "src",
+            arg.event.extendedProps.icon
+          );
 
-      // Add a click event listener to the element
-      eventTitle.on("click", function () {
-        var serializedArg = $(this).data("arg");
-        handleEventPopup(serializedArg);
-      });
+          // Append the image to the eventTitle
+          eventTitle.prepend(eventImage);
+        }
+        // Add a click event listener to the element
+        eventTitle.on("click", function () {
+          var serializedArg = $(this).data("arg");
+          handleEventPopup(serializedArg);
+        });
 
-      eventTitle.css({
-        background: `linear-gradient(to bottom, ${eventBackgroundColor}, #f8f8ff)`,
-        // color: "white",
-        "border-color": eventBackgroundColor,
-      });
+        eventTitle.css({
+          background: `linear-gradient(to bottom, ${eventBackgroundColor}, #f8f8ff)`,
+          // color: "white",
+          "border-color": eventBackgroundColor,
+        });
 
-      return { domNodes: eventTitle };
+        return { domNodes: eventTitle };
+      }
+      return { domNodes: addEvent };
     },
 
     dayCellClassNames: function (arg) {
@@ -89,6 +134,20 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
         if (!(todaysEvents && todaysEvents.length > 0)) {
           classNames.push("no-events");
+        } else {
+          let extendProps = todaysEvents[0]._def.extendedProps;
+          if (
+            extendProps?.eventType == "companyHolidays" &&
+            extendProps?.sTime != "AMPM"
+          ) {
+            classNames.push("disableEventLink");
+          } else if (extendProps?.sTime == "AMPM") {
+            // jsut disable click on a tag bcz its holdiay
+            classNames.push(
+              `no-events ${todaysEvents[0]._def.ui.backgroundColor} enable-link fw-700 disableEventLink`
+            );
+          }
+          // classNames.push("addDiagonal");
         }
       } else {
         classNames = ["no-events"];
@@ -110,6 +169,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   var combinedDiv = $("<div class='selector-wrapper'>");
   combinedDiv.append(await addEmployeeSelect());
   combinedDiv.append(ProcessedSelect());
+  combinedDiv.append(typeOfWorkSelect());
   $(".fc-header-toolbar").children().eq(1).append(combinedDiv);
   $(".fc-today-button").click(function () {
     let chDt = calendar.getDate();
@@ -120,6 +180,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   });
   //   this is beacuse above await takse some time so we hence to render this function after new fullcalendaer render
   await window?.renerTopSearch();
+  $(".select2").select2();
 });
 //
 function gotoDrop() {
@@ -183,7 +244,7 @@ async function addEmployeeSelect() {
   let sHtml = '<div class="employee-select">';
   sHtml += '<label class="mb-0" for="styledSelect1">Employee</label>';
   sHtml +=
-    '<select onchange="handleEmployeeChange(this)" title="Select Employee" id="employee" multiple = "multiple" data-live-search="true">';
+    '<select onchange="handleEmployeeChange(this)" class="select2" title="Select Employee" id="employee" >';
   sHtml += `<option value=-1 >All</option>`;
   employees?.forEach(function (employee, index) {
     sHtml +=
@@ -205,7 +266,7 @@ function ProcessedSelect() {
   return `
   <div class="processed-select">
   <label class="mb-0" for="processed">Processed</label>
-  <select onchange="handleProcessedChange(this)" id="processed"  multiple = "multiple" title="Select Processed" data-live-search="true">
+  <select onchange="handleProcessedChange(this)" class="select2" id="processed"  title="Select Processed">
   <option value=-1>All</option>
   <option ${
     processed?.includes(0) ? "selected" : ""
@@ -219,7 +280,24 @@ function ProcessedSelect() {
   </select>
   </div>
   `;
-  // `;
+}
+function typeOfWorkSelect() {
+  let typeOfWork = localStorage.getItem("typeOfWork");
+  return `
+  <div class="typeOfWork-select">
+  <label class="mb-0" for="typeOfWork">Work</label>
+  <select onchange="handleTypeOfWorkChange(this)" class="select2" id="typeOfWork" title="Select type of work">
+  <option value=-1>All</option>
+  <option ${typeOfWork?.includes(0) ? "selected" : ""}  value="0">Home</option>
+    <option ${
+      typeOfWork?.includes(1) ? "selected" : ""
+    } value="1">Office</option>
+    <option ${
+      typeOfWork?.includes(2) ? "selected" : ""
+    } value="2">Nowork</option>
+  </select>
+  </div>
+  `;
 }
 
 function getDateWithoutTime(dt) {
