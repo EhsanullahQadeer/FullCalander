@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       handleEventPopup(data);
     }
   });
+  //
   // get selected date from local storage
   let defMonth = window.localStorage.getItem("selectedMonth");
   let defYear = window.localStorage.getItem("selectedYear");
@@ -47,36 +48,228 @@ document.addEventListener("DOMContentLoaded", async function () {
     longPressDelay: 1,
     dayMaxEvents: true, // allow "more" link when too many events,
     events: jsonData.events,
+
     eventContent: function (arg) {
       let event = arg.event;
+      let alreadyStoredData = JSON.parse(
+        localStorage.getItem("eventTrackData")
+      );
+
+     
       let extendedProps = event.extendedProps;
       let addEvent;
-      let { start, end } = event._instance.range;
-      if (extendedProps?.eventType == "companyHolidays") {
-        if (extendedProps?.sTime != "AMPM") {
-          let html = "";
-          const timeDifference = end - start;
-          const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
-          if (daysDifference == 1) {
+      var eventForDays;
+      if (event.end != null) {
+        eventForDays = (event.end - event.start) / (1000 * 60 * 60 * 24) + 1;
+      } else {
+        eventForDays = 1;
+      }
+      console.log(extendedProps);
+      
+
+      if (
+        extendedProps?.eventType == "companyHolidays" ||
+        extendedProps?.eventType == "userHolidays"
+      ) {
+        var eventGroup = {};
+        // Iterate through the events to group them by date and title
+        arg.view.calendar.getEvents().forEach(function (event) {
+          // debugger
+          if (event.start.toISOString() === arg.event.start.toISOString()) {
+            if (!eventGroup[event.start.toISOString()]) {
+              eventGroup[event.start.toISOString()] = [];
+            }
+            eventGroup[event.start.toISOString()].push({
+              title: event.title,
+              ...event.extendedProps,
+              start: event.start,
+              end: event.end,
+            });
+          }
+        });
+
+        let tooltipContent = { AM: {}, PM: {}, AMPM: {} };
+        if (eventGroup[arg.event.start.toISOString()]?.length > 0) {
+          eventGroup[arg.event.start.toISOString()].forEach((item) => {
+            if (eventForDays > 2) {
+              if (tooltipContent.AMPM[item.eventType] === undefined) {
+                tooltipContent.AMPM[item.eventType] = [];
+              }
+              tooltipContent.AMPM[item.eventType].push(item);
+            } else {
+              if (item?.sTime == "AM" && item?.eTime == "AM") {
+                if (tooltipContent.AM[item.eventType] === undefined) {
+                  tooltipContent.AM[item.eventType] = [];
+                }
+                tooltipContent.AM[item.eventType].push(item);
+              } else if (item?.sTime == "PM" && item?.eTime == "PM") {
+                if (tooltipContent.PM[item.eventType] === undefined) {
+                  tooltipContent.PM[item.eventType] = [];
+                }
+                tooltipContent.PM[item.eventType].push(item);
+              } else if (item?.sTime == "AMPM" && item?.eTime == "AMPM") {
+                if (tooltipContent.AMPM[item.eventType] === undefined) {
+                  tooltipContent.AMPM[item.eventType] = [];
+                }
+                tooltipContent.AMPM[item.eventType].push(item);
+              }
+            }
+          });
+
+          for (let data in tooltipContent) {
+            const tableId = `${
+              data +
+              "_" +
+              arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+            }`;
+            var tableWrapper = $("<div class='d-none'>").attr("id", tableId);
+            let table = $("<table class='tooltipData-table'>");
+            for (let key in tooltipContent[data]) {
+              tooltipContent[data][key].forEach(function (item) {
+                var dataRow = $("<tr>");
+                dataRow.append($("<td>").text(key));
+                if (item.title) {
+                  dataRow.append($("<td>").text(item.title));
+                }
+                table.append(dataRow);
+              });
+            }
+            tableWrapper.append(table);
+            $("body").append(tableWrapper);
+          }
+        }
+
+        if (eventForDays > 2) {
+          var innerDivs = [];
+          let indexTopush = 0;
+          let innerDiviteration = eventForDays - 1;
+
+          if (extendedProps.sTime != "AMPM") {
+            if (extendedProps.sTime == "AM") {
+              innerDivs.push(
+                $(
+                  `
+                  <div data-tooltip-content=${
+                    "AMPM_" +
+                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                  } class="leftPart-range leftPart custom-tooltip"><div>AM</div></div>
+                  
+                  `
+                )
+              );
+            } else if (extendedProps.sTime == "PM") {
+              innerDivs.push(
+                $(
+                  `<div data-tooltip-content=${
+                    "AMPM_" +
+                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                  }  class="rightPart rightPart-range custom-tooltip"><div>PM</div></div>`
+                )
+              );
+            }
+            innerDiviteration--;
+            indexTopush++;
+          }
+
+          if (extendedProps.eTime != "AMPM") {
+            if (extendedProps.eTime == "AM") {
+              innerDivs.push(
+                $(
+                  `
+                  <div data-tooltip-content=${
+                    "AMPM_" +
+                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                  } class="leftPart-range leftPart custom-tooltip"><div>AM</div></div>
+                  
+                  `
+                )
+              );
+            } else if (extendedProps.eTime == "PM") {
+              innerDivs.push(
+                $(
+                  `<div data-tooltip-content=${
+                    "AMPM_" +
+                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                  }  class="rightPart rightPart-range custom-tooltip"><div>PM</div></div>`
+                )
+              );
+            }
+            innerDiviteration--;
+          }
+
+          // if (extendedProps.sTime != "AMPM" || extendedProps.eTime != "AMPM") {
+          for (let i = 0; i < innerDiviteration; i++) {
+            innerDivs.splice(
+              indexTopush,
+              0,
+              $(
+                `<div data-tooltip-content=${
+                  "AMPM_" +
+                  arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                } class="custom-tooltip innerFuldays"> </div>`
+              )
+            );
+            indexTopush++;
+            // }
+          }
+
+          let fullDayMainDiv = $(
+            `<div class='addFullDayHoliday fulldayInnerMultiple'></div>`
+          );
+          let startIndex=0;
+          let endIndex=0;
+          alreadyStoredData.forEach((item,index)=>{
+            if(alreadyStoredData.length==1){
+              startIndex=0;
+            }else{
+              if(index<alreadyStoredData.length-1){
+                startIndex+=(item.lastColumn- item.firstColumn)+1
+              }
+              
+            }
+            endIndex += (item.lastColumn- item.firstColumn)+1;
+            
+          })
+          innerDivs=innerDivs.slice(startIndex,endIndex)
+     
+          fullDayMainDiv.append(innerDivs);
+          addEvent = fullDayMainDiv;
+        } else {
+          
+          if (extendedProps?.sTime != "AMPM") {
+            let html = "";
             if (extendedProps?.sTime == "AM" && extendedProps?.eTime == "AM") {
               // its means half day holiday
-              html =  $(`<div title=${event._def.title} class="leftPart"><div>AM</div></div>`);
+              html = $(
+                `<div data-tooltip-content=${
+                  "AM_" +
+                  arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                } class="leftPart custom-tooltip"><div>AM</div></div>`
+              );
             } else if (
               extendedProps?.sTime == "PM" &&
               extendedProps?.eTime == "PM"
             ) {
-              html = $(`<div title=${event._def.title}  class="rightPart"><div>PM</div></div>`);
+              html = $(
+                `<div data-tooltip-content=${
+                  "PM_" +
+                  arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+                }  class="rightPart custom-tooltip"><div>PM</div></div>`
+              );
             }
-          }
-          addEvent=html
-        } else {
-          addEvent = $(
-            `<div title=${event._def.title} class='addFullDayHoliday'></div>`
-          );
-        }
-      }else if(extendedProps?.eventType == "userHolidays"){
-        debugger
+            addEvent = html;
+          } else {
+            addEvent = $(
+              `<div data-tooltip-content=${
+                "AMPM_" +
+                arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+              }  class='addFullDayHoliday custom-tooltip'>
 
+
+            </div>`
+            );
+          }
+        }
       } else {
         var eventBackgroundColor = arg.backgroundColor;
         var eventTitle = $("<div data-arg='" + JSON.stringify(arg) + "'>").text(
@@ -104,7 +297,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           "border-color": eventBackgroundColor,
         });
 
-        return { domNodes: eventTitle };
+        addEvent = eventTitle;
       }
       return { domNodes: addEvent };
     },
@@ -112,42 +305,69 @@ document.addEventListener("DOMContentLoaded", async function () {
     dayCellClassNames: function (arg) {
       let { date } = arg;
       var classNames = [];
-
       var dayOfWeek = new Date(date);
       var dayName = dayOfWeek.toLocaleDateString("en-US", { weekday: "long" });
       var isWeekday = dayName == "Sunday" || dayName == "Saturday";
       if (isWeekday) {
         classNames.push("week-days");
       }
-
-      var date2 = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate() + 1
-      );
       //This gives the next day of the clicked day('date' contains the clicked day)
-
       var todaysEvents = calendar.getEvents();
       if (todaysEvents) {
-        todaysEvents = todaysEvents.filter(
-          (event) => event.start >= date && event.start < date2
-        );
+        todaysEvents = jsonData.events.filter((event) => {
+          let start = new Date(event.start);
+          let end = new Date(event.end);
+          // Adding one day to start and end
+          start.setDate(start.getDate() + 1);
+          end.setDate(end.getDate() + 1);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(0, 0, 0, 0);
+          return (
+            start.getTime() <= date.getTime() && end.getTime() > date.getTime()
+          );
+        });
         if (!(todaysEvents && todaysEvents.length > 0)) {
           classNames.push("no-events");
         } else {
-          let extendProps = todaysEvents[0]._def.extendedProps;
           if (
-            extendProps?.eventType == "companyHolidays" &&
-            extendProps?.sTime != "AMPM"
+            todaysEvents.some(
+              (event) =>
+                event?.eventType == "userHolidays" ||
+                event?.eventType == "companyHolidays"
+            )
           ) {
-            classNames.push("disableEventLink");
-          } else if (extendProps?.sTime == "AMPM") {
-            // jsut disable click on a tag bcz its holdiay
-            classNames.push(
-              `no-events ${todaysEvents[0]._def.ui.backgroundColor} enable-link fw-700 disableEventLink`
-            );
+            let isFullDayHoliday = todaysEvents.some((event) => {
+              let start = new Date(event.start);
+              let end = new Date(event.end);
+              // Adding one day to start and end
+              start.setDate(start.getDate() + 1);
+              end.setDate(end.getDate() + 1);
+              start.setHours(0, 0, 0, 0);
+              end.setHours(0, 0, 0, 0);
+              if (start.getTime() == date.getTime()) {
+                if (event?.sTime == "AMPM") {
+                  return true;
+                }
+              } else if (end.getTime() == date.getTime()) {
+                if (event?.eTime == "AMPM") {
+                  return true;
+                }
+              } else if (
+                start.getTime() < date.getTime() &&
+                end.getTime() > date.getTime()
+              ) {
+                return true;
+              }
+            });
+            if (isFullDayHoliday) {
+              // ${todaysEvents[0]._def.ui.backgroundColor}
+              classNames.push(
+                `no-events red  enable-link fw-700 disableEventLink`
+              );
+            } else {
+              classNames.push("disableEventLink");
+            }
           }
-          // classNames.push("addDiagonal");
         }
       } else {
         classNames = ["no-events"];

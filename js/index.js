@@ -11,27 +11,34 @@ async function fetchEvents(filter) {
   let params = filter ? filter : "";
   try {
     // Make the fetch request
-    let data = await $.ajax({
-      url: baseCfmUrl + params,
-      type: "GET",
-      dataType: "json",
-    });
+    // let data = await $.ajax({
+    //   url: baseCfmUrl + params,
+    //   type: "GET",
+    //   dataType: "json",
+    // });
     if (data) {
-      data[0].user_details.forEach(element => {
-       let userHolidays= element?.user_holidays.map(item => {
-          if (item.start && item.end) {
-            // Getting AM/PM
-            item.sTime = getTimeFromDate(item.start);
-            item.eTime = getTimeFromDate(item.end);
-            //
-            item.start = formatDateToYYYYMMDD(item.start);
-            item.end = formatDateToYYYYMMDD(item.end);
-            item.eventType = "userHolidays";
-          }
-          return item;
-        });
-       delete element?.user_holidays;
-        jsonData.events.push(element,...userHolidays)
+      data[0].user_details.forEach((element, index) => {
+        // to prevent display holidays multiple user , and just display alert we can not display holidays for multiple users
+        if (index === 0) {
+          let userHolidays = element?.user_holidays.map((item) => {
+            if (item.start && item.end) {
+              // Getting AM/PM
+              item.sTime = getTimeFromDate(item.start);
+              item.eTime = getTimeFromDate(item.end);
+              //
+              item.start = formatDateToYYYYMMDD(item.start);
+              item.end = formatDateToYYYYMMDD(item.end);
+              item.eventType = "userHolidays";
+            }
+            return item;
+          });
+          delete element?.user_holidays;
+          jsonData.events.push(element, ...userHolidays);
+        } else {
+          delete element?.user_holidays;
+          jsonData.events.push(element);
+          return;
+        }
       });
     }
     // comapny holidays
