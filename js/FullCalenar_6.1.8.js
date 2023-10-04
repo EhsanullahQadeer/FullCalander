@@ -17165,36 +17165,6 @@ var FullCalendar = (function (exports) {
           let isAbsolute = placement.isAbsolute;
           let left = "";
           let right = "";
-          
-          // store columns numbers to local
-
-          let storedInstanceId = localStorage.getItem("eventInstanceId");
-          if (storedInstanceId == instanceId) {
-            let alreadyStoredData = JSON.parse(
-              localStorage.getItem("eventTrackData")
-            );
-            // alreadyStoredData.iterartion += 1;
-            // alreadyStoredData.firstColumn = seg?.firstCol;
-            // alreadyStoredData.lastColumn = seg?.lastCol;
-            alreadyStoredData.push({
-                firstColumn: seg?.firstCol,
-                lastColumn: seg?.lastCol,
-              })
-            localStorage.setItem("eventTrackData", JSON.stringify(alreadyStoredData));
-          } else {
-            localStorage.setItem("eventInstanceId", instanceId);
-            localStorage.setItem("eventTrackData", JSON.stringify([{
-              firstColumn: seg?.firstCol,
-              lastColumn: seg?.lastCol,
-            }]));
-          }
-          let timeOutId;
-          clearTimeout(timeOutId);
-          timeOutId= setTimeout(() => {
-            localStorage.removeItem("eventInstanceId");
-            localStorage.removeItem("eventTrackData");
-          }, 60000*5);
-    
           if (isAbsolute) {
             if (context.isRtl) {
               right = 0;

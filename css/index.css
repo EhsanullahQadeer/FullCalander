@@ -93,39 +93,28 @@ body {
   left: 0;
 }
 .addFullDayHoliday {
-  display: flex;
-  /* flex-wrap: wrap; */
-  justify-content: center;
-  align-items: center;
   height: 100%;
   width: 100%;
   position: absolute;
   overflow: hidden;
-  /* background-color: aqua; */
-  cursor: default;
+  background-color: #d1d1d1;
   z-index: 1000;
-  cursor:not-allowed;
-  
+  cursor: not-allowed;
 }
-.fulldayInnerMultiple div {
-  flex: 1;
-  text-align: center;
-}
-.innerFuldays{
-  width: 100%;
-  height: 100%;
+.fc-daygrid-day-number {
+  z-index: 1040 !important;
 }
 .leftPart,
 .rightPart {
+  background-color: #d1d1d1;
   width: 100%;
   height: 100%;
   position: absolute;
-  cursor:not-allowed;
+  cursor: not-allowed;
   z-index: 1020;
 }
 
 .leftPart {
-  background-color: #fff;
   clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
 }
 .leftPart::after {
@@ -133,20 +122,11 @@ body {
   width: 100%;
   height: 100%;
   position: absolute;
-  background-color: #000;
+  background-color: #777575;
   clip-path: polygon(100% -0.5%, 100% 100%, -0.5% 100%);
 }
-.leftPart-range {
-  position: relative;
-  right: -1px;
-}
-.leftPart-range::after {
-  left: 0;
-}
-
 
 .rightPart {
-  background-color: #fff;
   clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
 }
 .rightPart::before {
@@ -154,17 +134,8 @@ body {
   width: 100%;
   height: 100%;
   position: absolute;
-  background-color: #000;
+  background-color: #777575;
   clip-path: polygon(0% 0%, 100% 0.5%, 0.5% 100%);
-  
-}
-.rightPart-range{
-  position: relative;
-  left: -1px;
-}
-.rightPart-range::before{
-  right: 0;
-  left: 0;
 }
 
 .leftPart div {
@@ -184,9 +155,7 @@ body {
   font-size: 17px;
 }
 
-.disableEventLink .fc-daygrid-day-number {
-  display: none;
-}
+
 .enable-link .fc-daygrid-day-number {
   display: block;
 }

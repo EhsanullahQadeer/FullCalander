@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   var calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     headerToolbar: {
-      right: "prev,next today dayGridMonth,dayGridWeek",
+      right: "prev,next today dayGridMonth,dayGridWeek,dayGridDay,listWeek",
     },
     views: {
       multiMonthYearGrid: {
@@ -51,22 +51,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     eventContent: function (arg) {
       let event = arg.event;
-      let alreadyStoredData = JSON.parse(
-        localStorage.getItem("eventTrackData")
-      );
-
-     
       let extendedProps = event.extendedProps;
       let addEvent;
-      var eventForDays;
-      if (event.end != null) {
-        eventForDays = (event.end - event.start) / (1000 * 60 * 60 * 24) + 1;
-      } else {
-        eventForDays = 1;
-      }
-      console.log(extendedProps);
-      
-
       if (
         extendedProps?.eventType == "companyHolidays" ||
         extendedProps?.eventType == "userHolidays"
@@ -74,7 +60,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         var eventGroup = {};
         // Iterate through the events to group them by date and title
         arg.view.calendar.getEvents().forEach(function (event) {
-          // debugger
           if (event.start.toISOString() === arg.event.start.toISOString()) {
             if (!eventGroup[event.start.toISOString()]) {
               eventGroup[event.start.toISOString()] = [];
@@ -87,35 +72,26 @@ document.addEventListener("DOMContentLoaded", async function () {
             });
           }
         });
-
         let tooltipContent = { AM: {}, PM: {}, AMPM: {} };
         if (eventGroup[arg.event.start.toISOString()]?.length > 0) {
           eventGroup[arg.event.start.toISOString()].forEach((item) => {
-            if (eventForDays > 2) {
+            if (item?.sTime == "AM" && item?.eTime == "AM") {
+              if (tooltipContent.AM[item.eventType] === undefined) {
+                tooltipContent.AM[item.eventType] = [];
+              }
+              tooltipContent.AM[item.eventType].push(item);
+            } else if (item?.sTime == "PM" && item?.eTime == "PM") {
+              if (tooltipContent.PM[item.eventType] === undefined) {
+                tooltipContent.PM[item.eventType] = [];
+              }
+              tooltipContent.PM[item.eventType].push(item);
+            } else if (item?.sTime == "AMPM" && item?.eTime == "AMPM") {
               if (tooltipContent.AMPM[item.eventType] === undefined) {
                 tooltipContent.AMPM[item.eventType] = [];
               }
               tooltipContent.AMPM[item.eventType].push(item);
-            } else {
-              if (item?.sTime == "AM" && item?.eTime == "AM") {
-                if (tooltipContent.AM[item.eventType] === undefined) {
-                  tooltipContent.AM[item.eventType] = [];
-                }
-                tooltipContent.AM[item.eventType].push(item);
-              } else if (item?.sTime == "PM" && item?.eTime == "PM") {
-                if (tooltipContent.PM[item.eventType] === undefined) {
-                  tooltipContent.PM[item.eventType] = [];
-                }
-                tooltipContent.PM[item.eventType].push(item);
-              } else if (item?.sTime == "AMPM" && item?.eTime == "AMPM") {
-                if (tooltipContent.AMPM[item.eventType] === undefined) {
-                  tooltipContent.AMPM[item.eventType] = [];
-                }
-                tooltipContent.AMPM[item.eventType].push(item);
-              }
             }
           });
-
           for (let data in tooltipContent) {
             const tableId = `${
               data +
@@ -139,136 +115,34 @@ document.addEventListener("DOMContentLoaded", async function () {
           }
         }
 
-        if (eventForDays > 2) {
-          var innerDivs = [];
-          let indexTopush = 0;
-          let innerDiviteration = eventForDays - 1;
-
-          if (extendedProps.sTime != "AMPM") {
-            if (extendedProps.sTime == "AM") {
-              innerDivs.push(
-                $(
-                  `
-                  <div data-tooltip-content=${
-                    "AMPM_" +
-                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                  } class="leftPart-range leftPart custom-tooltip"><div>AM</div></div>
-                  
-                  `
-                )
-              );
-            } else if (extendedProps.sTime == "PM") {
-              innerDivs.push(
-                $(
-                  `<div data-tooltip-content=${
-                    "AMPM_" +
-                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                  }  class="rightPart rightPart-range custom-tooltip"><div>PM</div></div>`
-                )
-              );
-            }
-            innerDiviteration--;
-            indexTopush++;
-          }
-
-          if (extendedProps.eTime != "AMPM") {
-            if (extendedProps.eTime == "AM") {
-              innerDivs.push(
-                $(
-                  `
-                  <div data-tooltip-content=${
-                    "AMPM_" +
-                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                  } class="leftPart-range leftPart custom-tooltip"><div>AM</div></div>
-                  
-                  `
-                )
-              );
-            } else if (extendedProps.eTime == "PM") {
-              innerDivs.push(
-                $(
-                  `<div data-tooltip-content=${
-                    "AMPM_" +
-                    arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                  }  class="rightPart rightPart-range custom-tooltip"><div>PM</div></div>`
-                )
-              );
-            }
-            innerDiviteration--;
-          }
-
-          // if (extendedProps.sTime != "AMPM" || extendedProps.eTime != "AMPM") {
-          for (let i = 0; i < innerDiviteration; i++) {
-            innerDivs.splice(
-              indexTopush,
-              0,
-              $(
-                `<div data-tooltip-content=${
-                  "AMPM_" +
-                  arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                } class="custom-tooltip innerFuldays"> </div>`
-              )
-            );
-            indexTopush++;
-            // }
-          }
-
-          let fullDayMainDiv = $(
-            `<div class='addFullDayHoliday fulldayInnerMultiple'></div>`
-          );
-          let startIndex=0;
-          let endIndex=0;
-          alreadyStoredData.forEach((item,index)=>{
-            if(alreadyStoredData.length==1){
-              startIndex=0;
-            }else{
-              if(index<alreadyStoredData.length-1){
-                startIndex+=(item.lastColumn- item.firstColumn)+1
-              }
-              
-            }
-            endIndex += (item.lastColumn- item.firstColumn)+1;
-            
-          })
-          innerDivs=innerDivs.slice(startIndex,endIndex)
-     
-          fullDayMainDiv.append(innerDivs);
-          addEvent = fullDayMainDiv;
-        } else {
-          
-          if (extendedProps?.sTime != "AMPM") {
-            let html = "";
-            if (extendedProps?.sTime == "AM" && extendedProps?.eTime == "AM") {
-              // its means half day holiday
-              html = $(
-                `<div data-tooltip-content=${
-                  "AM_" +
-                  arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                } class="leftPart custom-tooltip"><div>AM</div></div>`
-              );
-            } else if (
-              extendedProps?.sTime == "PM" &&
-              extendedProps?.eTime == "PM"
-            ) {
-              html = $(
-                `<div data-tooltip-content=${
-                  "PM_" +
-                  arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-                }  class="rightPart custom-tooltip"><div>PM</div></div>`
-              );
-            }
-            addEvent = html;
-          } else {
-            addEvent = $(
+        let { sTime, eTime } = extendedProps;
+        if (sTime != "AMPM" && eTime != "AMPM") {
+          let html = "";
+          if (sTime == "AM" && eTime == "AM") {
+            // its means half day holiday
+            html = $(
               `<div data-tooltip-content=${
-                "AMPM_" +
+                "AM_" +
                 arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
-              }  class='addFullDayHoliday custom-tooltip'>
-
-
-            </div>`
+              } class="leftPart custom-tooltip"><div></div></div>`
+            );
+          } else if (sTime == "PM" && eTime == "PM") {
+            html = $(
+              `<div data-tooltip-content=${
+                "PM_" +
+                arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+              }  class="rightPart custom-tooltip" ><div></div></div>`
             );
           }
+          addEvent = html;
+        } else {
+          addEvent = $(
+            `<div data-tooltip-content=${
+              "AMPM_" +
+              arg.event.start.toISOString().replace(/[^a-zA-Z0-9]+/g, "_")
+            }  class='addFullDayHoliday custom-tooltip'>
+            </div>`
+          );
         }
       } else {
         var eventBackgroundColor = arg.backgroundColor;
@@ -314,59 +188,29 @@ document.addEventListener("DOMContentLoaded", async function () {
       //This gives the next day of the clicked day('date' contains the clicked day)
       var todaysEvents = calendar.getEvents();
       if (todaysEvents) {
-        todaysEvents = jsonData.events.filter((event) => {
-          let start = new Date(event.start);
-          let end = new Date(event.end);
-          // Adding one day to start and end
-          start.setDate(start.getDate() + 1);
-          end.setDate(end.getDate() + 1);
-          start.setHours(0, 0, 0, 0);
-          end.setHours(0, 0, 0, 0);
-          return (
-            start.getTime() <= date.getTime() && end.getTime() > date.getTime()
-          );
+        todaysEvents = todaysEvents.filter((event) => {
+          return event.start.toISOString() === date.toISOString();
         });
+
         if (!(todaysEvents && todaysEvents.length > 0)) {
           classNames.push("no-events");
         } else {
           if (
             todaysEvents.some(
               (event) =>
-                event?.eventType == "userHolidays" ||
-                event?.eventType == "companyHolidays"
+                event.extendedProps?.eventType == "userHolidays" ||
+                event.extendedProps?.eventType == "companyHolidays"
             )
           ) {
-            let isFullDayHoliday = todaysEvents.some((event) => {
-              let start = new Date(event.start);
-              let end = new Date(event.end);
-              // Adding one day to start and end
-              start.setDate(start.getDate() + 1);
-              end.setDate(end.getDate() + 1);
-              start.setHours(0, 0, 0, 0);
-              end.setHours(0, 0, 0, 0);
-              if (start.getTime() == date.getTime()) {
-                if (event?.sTime == "AMPM") {
-                  return true;
-                }
-              } else if (end.getTime() == date.getTime()) {
-                if (event?.eTime == "AMPM") {
-                  return true;
-                }
-              } else if (
-                start.getTime() < date.getTime() &&
-                end.getTime() > date.getTime()
-              ) {
-                return true;
-              }
-            });
-            if (isFullDayHoliday) {
-              // ${todaysEvents[0]._def.ui.backgroundColor}
-              classNames.push(
-                `no-events red  enable-link fw-700 disableEventLink`
+            let isHalfDayHoliday = todaysEvents.some((event) => {
+              return (
+                event.extendedProps?.sTime == "AM" ||
+                event.extendedProps?.sTime == "PM"
               );
-            } else {
-              classNames.push("disableEventLink");
-            }
+            });
+            classNames.push(
+              `no-events red  enable-link fw-700 disableEventLink`
+            );
           }
         }
       } else {
@@ -398,10 +242,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     $("#month").val(m);
     $("#year").val(y);
   });
+
   //   this is beacuse above await takse some time so we hence to render this function after new fullcalendaer render
   await window?.renerTopSearch();
   $(".select2").select2();
 });
+
 //
 function gotoDrop() {
   let sHtml = "";

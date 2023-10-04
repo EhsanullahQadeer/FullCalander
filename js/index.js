@@ -11,11 +11,11 @@ async function fetchEvents(filter) {
   let params = filter ? filter : "";
   try {
     // Make the fetch request
-    // let data = await $.ajax({
-    //   url: baseCfmUrl + params,
-    //   type: "GET",
-    //   dataType: "json",
-    // });
+    let data = await $.ajax({
+      url: baseCfmUrl + params,
+      type: "GET",
+      dataType: "json",
+    });
     if (data) {
       data[0].user_details.forEach((element, index) => {
         // to prevent display holidays multiple user , and just display alert we can not display holidays for multiple users
@@ -470,7 +470,7 @@ function handleClear() {
   let selectedMonth = $(".select_month").val();
   // Replace tolbar rigth to intially
   calendar.setOption("headerToolbar", {
-    right: "prev,next today dayGridMonth,dayGridWeek",
+    right: "prev,next today dayGridMonth,dayGridWeek,dayGridDay,listWeek",
   });
   handleMonthChange(selectedMonth);
   $("#from").val("");
