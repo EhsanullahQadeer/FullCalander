@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   var calendarEl = document.getElementById("iCalendar");
   var calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
+    // initialView: "multiMonthYear",
     headerToolbar: {
       right: "prev,next today dayGridMonth,dayGridWeek,dayGridDay,listWeek",
     },
@@ -103,11 +104,13 @@ document.addEventListener("DOMContentLoaded", async function () {
             for (let key in tooltipContent[data]) {
               tooltipContent[data][key].forEach(function (item) {
                 var dataRow = $("<tr>");
-                dataRow.append($("<td>").text(key));
+                dataRow.append($("<th>").text(key));
                 if (item.title) {
-                  dataRow.append($("<td>").text(item.title));
+                  var titleRow = $("<tr>");
+                  titleRow.append($("<td>").text(item.title));
                 }
                 table.append(dataRow);
+                table.append(titleRow);
               });
             }
             tableWrapper.append(table);
@@ -202,12 +205,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 event.extendedProps?.eventType == "companyHolidays"
             )
           ) {
-            let isHalfDayHoliday = todaysEvents.some((event) => {
-              return (
-                event.extendedProps?.sTime == "AM" ||
-                event.extendedProps?.sTime == "PM"
-              );
-            });
             classNames.push(
               `no-events red  enable-link fw-700 disableEventLink`
             );

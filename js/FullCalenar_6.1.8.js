@@ -2220,7 +2220,8 @@ var FullCalendar = (function (exports) {
       return currentRes;
     };
   }
-  function memoizeArraylike(workerFunc, resEquality, teardownFunc) { // used at all?
+  function memoizeArraylike(workerFunc, resEquality, teardownFunc) {
+    // used at all?
     let currentArgSets = [];
     let currentResults = [];
     return (newArgSets) => {
@@ -3217,8 +3218,7 @@ var FullCalendar = (function (exports) {
     let defs = filterHash(eventStore.defs, filterFunc);
     let instances = filterHash(
       eventStore.instances,
-      (instance) =>
-        defs[instance.defId] // still exists?
+      (instance) => defs[instance.defId] // still exists?
     );
     return {
       defs,
@@ -7983,7 +7983,8 @@ var FullCalendar = (function (exports) {
       };
       // TODO: give interactionSegs?
     }
-    sliceNowDate(date, dateProfile, nextDayThreshold, context, ...extraArgs) { // does not memoize
+    sliceNowDate(date, dateProfile, nextDayThreshold, context, ...extraArgs) {
+      // does not memoize
       return this._sliceDateSpan(
         {
           range: {
@@ -8199,8 +8200,7 @@ var FullCalendar = (function (exports) {
       case "REMOVE_ALL_EVENT_SOURCES":
         return filterEventStoreDefs(
           eventStore,
-          (eventDef) =>
-            !eventDef.sourceId // only keep events with no source id
+          (eventDef) => !eventDef.sourceId // only keep events with no source id
         );
       case "REMOVE_ALL_EVENTS":
         return createEmptyEventStore();
@@ -9957,32 +9957,82 @@ var FullCalendar = (function (exports) {
       };
     }
     render() {
-      // let { props, state } = this;
-      // return (y(ViewContextType.Consumer, null, (context) => {
-      //     let { viewApi, options, calendarApi } = context;
-      //     let { moreLinkText } = options;
-      //     let { moreCnt } = props;
-      //     let range = computeRange(props);
-      //     let text = typeof moreLinkText === 'function' // TODO: eventually use formatWithOrdinals
-      //         ? moreLinkText.call(calendarApi, moreCnt)
-      //         : `+${moreCnt} ${moreLinkText}`;
-      //     let hint = formatWithOrdinals(options.moreLinkHint, [moreCnt], text);
-      //     let renderProps = {
-      //         num: moreCnt,
-      //         shortText: `+${moreCnt}`,
-      //         text,
-      //         view: viewApi,
-      //     };
-      //     return (y(_, null,
-      //         Boolean(props.moreCnt) && (y(ContentContainer, { elTag: props.elTag || 'a', elRef: this.handleLinkEl, elClasses: [
-      //                 ...(props.elClasses || []),
-      //                 'fc-more-link',
-      //             ], elStyle: props.elStyle, elAttrs: Object.assign(Object.assign(Object.assign({}, props.elAttrs), createAriaClickAttrs(this.handleClick)), { title: hint, 'aria-expanded': state.isPopoverOpen, 'aria-controls': state.isPopoverOpen ? state.popoverId : '' }), renderProps: renderProps, generatorName: "moreLinkContent", customGenerator: options.moreLinkContent, defaultGenerator: props.defaultGenerator || renderMoreLinkInner$1, classNameGenerator: options.moreLinkClassNames, didMount: options.moreLinkDidMount, willUnmount: options.moreLinkWillUnmount }, props.children)),
-      //         state.isPopoverOpen && (y(MorePopover, { id: state.popoverId, startDate: range.start, endDate: range.end, dateProfile: props.dateProfile, todayRange: props.todayRange, extraDateSpan: props.extraDateSpan, parentEl: this.parentEl, alignmentEl: props.alignmentElRef ?
-      //                 props.alignmentElRef.current :
-      //                 this.linkEl, alignGridTop: props.alignGridTop, forceTimed: props.forceTimed, onClose: this.handlePopoverClose }, props.popoverContent()))));
-      // }));
+      let { props, state } = this;
+      return y(ViewContextType.Consumer, null, (context) => {
+        let { viewApi, options, calendarApi } = context;
+        let { moreLinkText } = options;
+        let { moreCnt } = props;
+        // debugger
+        let range = computeRange(props);
+        let text =
+          typeof moreLinkText === "function" // TODO: eventually use formatWithOrdinals
+            ? moreLinkText.call(calendarApi, moreCnt)
+            : `+${moreCnt} ${moreLinkText}`;
+        let hint = formatWithOrdinals(options.moreLinkHint, [moreCnt], text);
+        let renderProps = {
+          num: moreCnt,
+          shortText: `+${moreCnt}`,
+          text,
+          view: viewApi,
+        };
+        return y(
+          _,
+          null,
+          Boolean(props.moreCnt) &&
+            y(
+              ContentContainer,
+              {
+                elTag: props.elTag || "a",
+                elRef: this.handleLinkEl,
+                elClasses: [...(props.elClasses || []), "fc-more-link"],
+                elStyle: props.elStyle,
+                elAttrs: Object.assign(
+                  Object.assign(
+                    Object.assign({}, props.elAttrs),
+                    createAriaClickAttrs(this.handleClick)
+                  ),
+                  {
+                    title: hint,
+                    "aria-expanded": state.isPopoverOpen,
+                    "aria-controls": state.isPopoverOpen ? state.popoverId : "",
+                  }
+                ),
+                renderProps: renderProps,
+                generatorName: "moreLinkContent",
+                customGenerator: options.moreLinkContent,
+                defaultGenerator:
+                  props.defaultGenerator ||
+                   renderMoreLinkInner$1,
+                classNameGenerator: options.moreLinkClassNames,
+                didMount: options.moreLinkDidMount,
+                willUnmount: options.moreLinkWillUnmount,
+              },
+              props.children
+            ),
+          state.isPopoverOpen &&
+            y(
+              MorePopover,
+              {
+                id: state.popoverId,
+                startDate: range.start,
+                endDate: range.end,
+                dateProfile: props.dateProfile,
+                todayRange: props.todayRange,
+                extraDateSpan: props.extraDateSpan,
+                parentEl: this.parentEl,
+                alignmentEl: props.alignmentElRef
+                  ? props.alignmentElRef.current
+                  : this.linkEl,
+                alignGridTop: props.alignGridTop,
+                forceTimed: props.forceTimed,
+                onClose: this.handlePopoverClose,
+              },
+              props.popoverContent()
+            )
+        );
+      });
     }
+
     componentDidMount() {
       this.updateParentEl();
     }
@@ -17145,8 +17195,6 @@ var FullCalendar = (function (exports) {
       isResizing,
       isDateSelecting
     ) {
-        
-       
       let { context } = this;
       let { eventSelection } = this.props;
       let { framePositions } = this.state;
@@ -17155,9 +17203,8 @@ var FullCalendar = (function (exports) {
       let isMirror = isDragging || isResizing || isDateSelecting;
       let nodes = [];
       if (framePositions) {
-       
         for (let placement of segPlacements) {
-            // debugger
+          // debugger
           let { seg } = placement;
           let { instanceId } = seg.eventRange.instance;
           let key = instanceId + ":" + col;

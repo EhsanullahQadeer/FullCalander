@@ -68,6 +68,15 @@ async function fetchEvents(filter) {
 
     // first clear all events
     calendar.removeAllEvents();
+    jsonData.events.forEach((item)=>{
+      // debugger
+      // console.log(item.start);
+      // if(item.start=="2023-03-09"){
+      //   debugger
+      // }
+      
+    })
+    console.log(jsonData.events);
     window.calendar.addEventSource(jsonData.events);
   } catch (error) {}
 }
@@ -318,6 +327,7 @@ $(function () {
       toDate = new Date(toDate);
       fromDate.setDate(1);
       toDate.setDate(1);
+      // debugger
       window.calendar.changeView("multiMonthYear");
 
       // change tolbar grid stack only if search lies in the same year
